@@ -1,98 +1,95 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { Text, View, StyleSheet, TextInput, ImageBackground, TouchableOpacity } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Logo from "../../assets/images/vertical-logo.svg";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+export default function AuthScreen() {
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+    return(
+
+        <SafeAreaProvider>        
+            <SafeAreaView style = { styles.container }>
+                <ImageBackground 
+                    source = {require("../../assets/images/auth-background-cort.jpg")} 
+                    style = { styles.imageBackgroundContainer }
+                    imageStyle = { styles.imageBackground }
+                >
+                    <LinearGradient 
+                        colors={['hsla(0, 82%, 44%, 0.88)', 'rgba(109, 8, 8, 0.7)', "rgba(24, 24, 168, 0.6)"]} 
+                        start={{ x: 0.5, y: 0.3}} 
+                        style = { styles.linearGradient }
+                    />                    
+                    <Logo style = { styles.logo }/>
+                    <TextInput placeholder="Digite o seu usuário" style = { styles.textInput } autoFocus={true} placeholderTextColor={"rgba(28, 13, 13, 0.5)"}></TextInput>
+                    <TextInput placeholder="Digite a sua senha" placeholderTextColor={"rgba(0, 0, 0, 0.5)"} secureTextEntry={true} style = { styles.textInput }></TextInput>
+                    <TouchableOpacity style = { styles.button }>
+                        <Text style = { styles.text}>Entrar</Text>
+                    </TouchableOpacity>                
+                </ImageBackground>
+            </SafeAreaView>
+        </SafeAreaProvider>
+
+        
+    );
+
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+
+    container: {
+        flex: 1,
+    },
+
+    imageBackgroundContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 17,
+    },
+
+    imageBackground: {
+        width: "100%",
+        height: "100%"
+    },
+
+    linearGradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        height: "100%",
+    },
+
+    logo: {
+        zIndex: 1,
+        marginBottom: 50
+    },
+
+    textInput: {
+        height: 39,
+        width: "75%",
+        backgroundColor: "#FFFFFF",
+        zIndex: 1,
+        paddingLeft: 13,
+        borderRadius: 3,
+        fontSize: 15,
+    },
+
+    button: {
+        borderStyle: "solid",
+        borderColor: "#FFFFFF",
+        borderWidth: 2,
+        paddingHorizontal: 18,
+        paddingVertical: 7,
+        borderRadius: 5,
+        marginTop: 23,
+    },
+
+    text: {
+        color: "#FFFFFF",
+        fontWeight: "bold",
+        fontSize: 20
+    }
+
 });
