@@ -1,10 +1,38 @@
+import { useState, useEffect } from "react";
+
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { Text, View, StyleSheet, TextInput, ImageBackground, TouchableOpacity } from "react-native";
+import { Text, View, StyleSheet, TextInput, ImageBackground, TouchableOpacity, ActivityIndicator } from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
+
 import Logo from "../../assets/images/vertical-logo.svg";
 
+import { StackNavigatorProps } from "../_layout";
 
-export default function AuthScreen() {
+import { getAuth, signInWithEmailAndPassword, User } from "firebase/auth";
+import firebase from "firebase/app";
+import { app } from "../../config/firebaseConfig.js";
+
+export default function AuthScreen({ navigation } : StackNavigatorProps) { 
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const anyFieldEmpty : boolean = email == "" || password == "";
+
+    const auth = getAuth(app);
+    const [user, setUser] = useState<User | undefined>(undefined);
+
+    const login = async () => await signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            setUser(userCredential.user);
+            setEmail("");
+            setPassword("");
+            navigation.navigate("Home");
+        }).catch(error => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+        });
 
     return(
 
@@ -21,17 +49,56 @@ export default function AuthScreen() {
                         style = { styles.linearGradient }
                     />                    
                     <Logo style = { styles.logo }/>
-                    <TextInput placeholder="Digite o seu usuário" style = { styles.textInput } autoFocus={true} placeholderTextColor={"rgba(28, 13, 13, 0.5)"}></TextInput>
-                    <TextInput placeholder="Digite a sua senha" placeholderTextColor={"rgba(0, 0, 0, 0.5)"} secureTextEntry={true} style = { styles.textInput }></TextInput>
-                    <TouchableOpacity style = { styles.button }>
-                        <Text style = { styles.text}>Entrar</Text>
-                    </TouchableOpacity>                
+                    <TextInput 
+                        placeholder="Digite o seu e-mail" 
+                        placeholderTextColor={"rgba(28, 13, 13, 0.5)"}
+                        style = { styles.textInput } 
+                        autoFocus={ true }
+                        value = { email }
+                        onChangeText = { value => setEmail(value) }                       
+                    />
+                    <TextInput 
+                        placeholder="Digite a sua senha" 
+                        placeholderTextColor={"rgba(0, 0, 0, 0.5)"} 
+                        secureTextEntry={true} 
+                        style = { styles.textInput }
+                        value={ password }
+                        onChangeText={ value => setPassword(value) }
+                    />
+                    <TouchableOpacity 
+                        style = { [styles.button, { borderColor: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF"}] } 
+                        onPress={ () => {
+                            setIsLoading(true);
+                            login();
+                            setIsLoading(false);
+                        } }
+                        disabled = { anyFieldEmpty ? true : false }
+                    >
+                        {
+                            isLoading ? <Text>...</Text> : 
+                                <Text style = { [styles.text, { color: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF" }] }>Entrar</Text>
+                        }
+                    </TouchableOpacity>                    
                 </ImageBackground>
             </SafeAreaView>
         </SafeAreaProvider>
 
         
     );
+
+}
+
+declare type Conditional = {
+    isLoading : boolean
+}
+
+function ButtonContent({ isLoading } : Conditional) {
+
+    if(isLoading) {
+        return <ActivityIndicator color={ "#FFFFFF" } size={ 20 }></ActivityIndicator>
+    } else {
+        return <Text style = { styles.text}>Entrar</Text>;
+    }
 
 }
 
@@ -86,10 +153,20 @@ const styles = StyleSheet.create({
         marginTop: 23,
     },
 
+    buttonDisabled: {
+        borderStyle: "solid",
+        borderColor: "#a5a5a5ff",
+        borderWidth: 2,
+        paddingHorizontal: 18,
+        paddingVertical: 7,
+        borderRadius: 5,
+        marginTop: 23,
+    },
+
     text: {
         color: "#FFFFFF",
         fontWeight: "bold",
         fontSize: 20
-    }
+    },
 
 });
