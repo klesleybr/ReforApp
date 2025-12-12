@@ -1,59 +1,93 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer, Theme, ThemeProvider, useNavigation } from '@react-navigation/native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import AuthScreen from './(tabs)';
 import HomeScreen from './(tabs)/home';
 
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createDrawerNavigator, DrawerNavigationProp } from "@react-navigation/drawer";
+import CustomDrawerContent from '@/components/custom-drawer';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { StyleSheet } from 'react-native';
 
-type RootStackParamsList = {
+import { Inter_400Regular, Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from 'react';
+
+SplashScreen.preventAutoHideAsync();
+
+const MyDefaultTheme : Theme = {
+  ...DefaultTheme,
+  colors : {
+    ...DefaultTheme.colors,
+    primary: "#6D0808",
+    background: "#E6E6E6",
+    text: "#000000"
+  },
+  fonts: {
+    ...DefaultTheme.fonts
+  }
+}
+
+type RootParamsList = {
   Auth: undefined;
   Home: undefined;
 }
-export type StackNavigatorProps = NativeStackScreenProps<RootStackParamsList>;
+export type StackNavigatorProps = NativeStackScreenProps<RootParamsList>;
+export type DrawerNavProps = DrawerNavigationProp<RootParamsList>;
 
-const Stack = createNativeStackNavigator<RootStackParamsList>();
 export default function RootStack() {
 
+  const [loaded, error] = useFonts(
+    { Inter_400Regular, Inter_700Bold }
+  );
+
+  useEffect(() => {
+    if(loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error])
+
+  if(!loaded && !error) return null;
+
+  const Stack = createNativeStackNavigator<RootParamsList>();
+  const Drawer = createDrawerNavigator();
+
+  const  Screens =  () => {
+    return(
+      <Stack.Navigator initialRouteName= "Auth" screenOptions={ { headerShown: false } }>
+        <Stack.Screen name = "Auth" component = { AuthScreen }  ></Stack.Screen>
+        <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
+      </Stack.Navigator>   
+    );
+  }  
+
+  // const colorScheme = useColorScheme();
+  // ... value = { colorScheme === 'dark' ? DarkTheme : DefaultTheme} ...
+
   return(
-    <Stack.Navigator initialRouteName= "Auth" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name = "Auth" component = { AuthScreen }  ></Stack.Screen>
-      <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
-    </Stack.Navigator>
-  );
-
-}
-
-
-
-
-/*
-export default function RootLayout() {
-  
-  const colorScheme = useColorScheme();
-
-  return (
-    // value = {colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-    
-    <ThemeProvider value={ DefaultTheme }>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        <Stack.Screen name = "Auth" />
-      </Stack>
-      <StatusBar style="auto" />
+    <ThemeProvider value = { MyDefaultTheme }>
+      <Drawer.Navigator 
+        screenOptions={ 
+          { 
+            headerShown: false, 
+            drawerStyle: { backgroundColor: MyDefaultTheme.colors.primary }                              
+          }
+        } 
+        initialRouteName = "Screens" 
+        drawerContent = { (props) => <CustomDrawerContent {...props} /> }      
+        
+      >
+        <Drawer.Screen name = "Screens" component = { Screens }></Drawer.Screen>        
+      </Drawer.Navigator>
     </ThemeProvider>
-    
   );
-  
+
 }
-  */
+
+const styles = StyleSheet.create({
 
 
+});
 

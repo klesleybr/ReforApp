@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { Text, StyleSheet, TextInput, ImageBackground, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Text, StyleSheet, TextInput, ImageBackground, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Logo from "@/assets/images/vertical-logo.svg";
 import { StackNavigatorProps } from "../_layout";
@@ -43,7 +43,7 @@ export default function AuthScreen({ navigation } : StackNavigatorProps) {
                     <Logo style = { styles.logo }/>
                     <TextInput 
                         placeholder="Digite o seu e-mail" 
-                        placeholderTextColor={"rgba(28, 13, 13, 0.5)"}
+                        placeholderTextColor={"rgba(28, 13, 13, 0.5)"}                    
                         style = { styles.textInput } 
                         autoFocus={ true }
                         value = { email }
@@ -59,7 +59,7 @@ export default function AuthScreen({ navigation } : StackNavigatorProps) {
                     />
                     <TouchableOpacity 
                         style = { [styles.button, { borderColor: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF"}] } 
-                        onPress={ () => login() }
+                        onPress={ () => navigation.navigate("Home") }
                         disabled = { anyFieldEmpty ? true : false }
                     >
                         <Text style = { [styles.text, { color: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF" }] }>Entrar</Text>
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
         paddingLeft: 13,
         borderRadius: 3,
         fontSize: 15,
+        fontFamily: "Inter_400Regular"
     },
 
     button: {
@@ -125,8 +126,9 @@ const styles = StyleSheet.create({
 
     text: {
         color: "#FFFFFF",
-        fontWeight: "bold",
-        fontSize: 20
+        //fontWeight: "bold",
+        fontSize: 20,
+        fontFamily: "Inter_700Bold"
     },
 
 });
