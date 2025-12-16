@@ -57,7 +57,7 @@ export default function RootStack() {
   const  Screens =  () => {
     return(
       <Stack.Navigator initialRouteName= "Auth" screenOptions={ { headerShown: false } }>
-        <Stack.Screen name = "Auth" component = { AuthScreen }  ></Stack.Screen>
+        <Stack.Screen name = "Auth" component = { AuthScreen } options= {{  }}></Stack.Screen>
         <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
       </Stack.Navigator>   
     );
@@ -72,14 +72,14 @@ export default function RootStack() {
         screenOptions={ 
           { 
             headerShown: false, 
-            drawerStyle: { backgroundColor: MyDefaultTheme.colors.primary }                              
+            drawerStyle: { backgroundColor: MyDefaultTheme.colors.primary }                                                 
           }
         } 
         initialRouteName = "Screens" 
         drawerContent = { (props) => <CustomDrawerContent {...props} /> }      
-        
+
       >
-        <Drawer.Screen name = "Screens" component = { Screens }></Drawer.Screen>        
+        <Drawer.Screen options={{ popToTopOnBlur: true }} name = "Screens" component = { Screens }></Drawer.Screen>        
       </Drawer.Navigator>
     </ThemeProvider>
   );
