@@ -10,10 +10,9 @@ type IconType = {
 export default function Header({ iconType } : IconType) {
 
     const colors = useTheme().colors;
-    const navigation = useNavigation();
-
+    const navigation = useNavigation();    
     return(
-        <View style = { [{ backgroundColor: colors.primary }, styles.container] }>
+    <View style = { [{ backgroundColor: colors.primary }, styles.container] }>
             <Ionicons 
                 name = { iconType } 
                 color = "#FFFFFF"
@@ -35,7 +34,7 @@ const styles = StyleSheet.create({
         height: 50,
         justifyContent: "center",
         alignItems: "center",
-        position: "absolute",
+        position: "static",
         top: 0
     },
     
