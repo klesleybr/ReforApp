@@ -52,6 +52,7 @@ const sellData = [
 
 export default function HomeScreen() {
 
+    const decimalStyle = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const { colors } = useTheme();    
 
     const chartData = [
@@ -90,7 +91,7 @@ export default function HomeScreen() {
                             labelLineConfig={{length: 30}}
                             tooltipDuration={1000}                    
                          />
-                        <Text style = { styles.chartTextBackground }>{"R$ " + goalData[0].value.toLocaleString("pt-BR") }</Text>
+                        <Text style = { styles.chartTextBackground }>{ decimalStyle.format(goalData[0].value) }</Text>
                     </View>                    
                     <Text style = { [styles.hint, { textAlign: "right", marginTop: 17 }] }>{"Gráfico do batimento\nde metas"}</Text>
                 </View>
@@ -107,7 +108,7 @@ export default function HomeScreen() {
                                     <Entypo name = "triangle-right" style = {{ marginRight: 5 }}></Entypo>
                                     <Text style = { [styles.itemText, { width: "20%" }] }>{item.amount + " un."}</Text>
                                     <Text style = { [styles.itemText, { width: "80%", textAlign: "center", paddingHorizontal:"5%" }] } numberOfLines={1}>{item.name}</Text>                                    
-                                    <Text style = { [styles.itemText, { width: "25%", textAlign: "right" }] }>{"R$ " + (item.amount * item.price).toFixed(2)}</Text>                                    
+                                    <Text style = { [styles.itemText, { width: "25%", textAlign: "right" }] }>{ decimalStyle.format(item.amount * item.price) }</Text>                                    
                                 </View>                                    
                             );
                         }}
