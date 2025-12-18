@@ -1,6 +1,6 @@
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
-import { View, Text, StyleSheet, FlatList } from "react-native";
+import { View, Text, StyleSheet, FlatList, ScrollView, Image } from "react-native";
 
 import { useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
@@ -8,6 +8,8 @@ import Header from "@/components/header";
 import { PieChart } from "react-native-gifted-charts";
 
 import Entypo from '@expo/vector-icons/Entypo';
+
+import ProgressBar from "@/components/progress-bar";
 
 
 const goalData = [
@@ -21,7 +23,7 @@ const goalData = [
     }
 ]
 
-const sellData = [
+const saleData = [
     {
         name: "Coca-Cola (1L)",
         amount: 2,
@@ -49,10 +51,28 @@ const sellData = [
     },
 ]
 
+const stockData = [
+    {
+        name: "Coca-Cola Lata (350 mL)",
+        stock: 60,
+        sold: 57
+    },
+    {
+        name: "Fanta Uva (2L)",
+        stock: 49,
+        sold: 30
+    },
+    {
+        name: "Pipoca Salgada",
+        stock: 58,
+        sold: 3
+    }
+]
+
+const decimalStyle = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function HomeScreen() {
-
-    const decimalStyle = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    
     const { colors } = useTheme();    
 
     const chartData = [
@@ -74,46 +94,53 @@ export default function HomeScreen() {
             <SafeAreaView style = { [styles.container, { backgroundColor: colors.background }] }>
                 <Header iconType="menu"/>
 
-                <View>
-                    <View style = { styles.chartContainer }>
-                        <PieChart 
-                            data={chartData}                                         
-                            donut 
-                            showTooltip 
-                            innerCircleColor={colors.background}
-                            textSize={22}
-                            font="Inter_400Regular"
-                            textBackgroundColor="transparent"
-                            innerRadius={90}
-                            paddingHorizontal={10}
-                            animationDuration={1000}
-                            isAnimated
-                            labelLineConfig={{length: 30}}
-                            tooltipDuration={1000}                    
-                         />
-                        <Text style = { styles.chartTextBackground }>{ decimalStyle.format(goalData[0].value) }</Text>
-                    </View>                    
-                    <Text style = { [styles.hint, { textAlign: "right", marginTop: 17 }] }>{"Gráfico do batimento\nde metas"}</Text>
-                </View>
+                <ScrollView 
+                    showsVerticalScrollIndicator = { false } 
+                    contentContainerStyle = { styles.scrollViewContainer } 
+                    style = {{ width: "100%" }}
+                >
+                    <View>
+                        <View style = { styles.chartContainer }>
+                            <PieChart 
+                                data = { chartData }
+                                donut 
+                                showTooltip 
+                                innerCircleColor = { colors.background }
+                                textSize = { 22 }
+                                font = "Inter_400Regular"
+                                textBackgroundColor = "transparent"
+                                innerRadius = { 90 }
+                                paddingHorizontal = { 10 }
+                                animationDuration = { 1000 }
+                                isAnimated
+                                labelLineConfig={{ length: 30 }}
+                                tooltipDuration={ 1000 }                    
+                                />
+                            <Text style = { styles.chartTextBackground }>{ decimalStyle.format(goalData[0].value) }</Text>
+                        </View>                    
+                        <Text style = { [styles.hint, { textAlign: "right", marginTop: 17 }] }>{"Gráfico do batimento\nde metas"}</Text>
+                    </View>
 
-                <View style = {{ width: "90%", marginTop: 24 }}>
-                    <Text style = {[ styles.hint, { fontSize: 18, marginLeft: 23 }]}>Vendas do dia</Text>
-                    <FlatList                         
-                        showsVerticalScrollIndicator={ false }                                                 
-                        data = { sellData } 
-                        style = { styles.flatListContainer }
-                        renderItem={({ item }) => {
-                            return(                                
-                                <View style = { styles.item }>
-                                    <Entypo name = "triangle-right" style = {{ marginRight: 5 }}></Entypo>
-                                    <Text style = { [styles.itemText, { width: "20%" }] }>{item.amount + " un."}</Text>
-                                    <Text style = { [styles.itemText, { width: "80%", textAlign: "center", paddingHorizontal:"5%" }] } numberOfLines={1}>{item.name}</Text>                                    
-                                    <Text style = { [styles.itemText, { width: "25%", textAlign: "right" }] }>{ decimalStyle.format(item.amount * item.price) }</Text>                                    
-                                </View>                                    
-                            );
-                        }}
-                    />                                    
-                </View>                
+                    <View style = {{ width: "90%", marginTop: 24 }}>
+                        <Text style = {{ ...styles.hint, fontSize: 18, marginLeft: 23 }}>Vendas do dia</Text>
+                        <FlatList                         
+                            showsVerticalScrollIndicator = { false }                                                 
+                            data = { saleData } 
+                            style = { styles.salesList }
+                            renderItem={({ item }) => <Sale data = { item }/>}
+                        />                                    
+                    </View>
+
+                    <View style = {{ width: "90%", marginTop: 24 }}>
+                        <Text style = {{ ...styles.hint, fontSize: 18, marginLeft: 23 }}>Situação do estoque</Text>
+                        <FlatList
+                            showsVerticalScrollIndicator = { false }
+                            data = { stockData }
+                            style = {{ marginTop: 12 }}
+                            renderItem = { ({ item }) => <StockAlert data = { item }/> }
+                        />                
+                    </View> 
+                </ScrollView>                               
             </SafeAreaView>
         </SafeAreaProvider>
 
@@ -121,8 +148,47 @@ export default function HomeScreen() {
 
 }
 
-const displayText = (text : string) => {
-    return text.length > 10 ? text.substring(0, 10) + "..." : text;
+function Sale({ data } : any) {
+
+    return(
+        <View style = { styles.saleItem }>
+            <Entypo name = "triangle-right" style = {{ marginRight: 5 }}></Entypo>
+            <Text style = {{ ...styles.saleItemText, width: "20%" }}>{ data.amount + " un." }</Text>
+            <Text style = {{ ...styles.saleItemText, width: "80%", textAlign: "center", paddingHorizontal:"5%" }} numberOfLines={ 1 }>{ data.name }</Text>                                    
+            <Text style = {{ ...styles.saleItemText, width: "25%", textAlign: "right" }}>{ decimalStyle.format(data.amount * data.price) }</Text>                                    
+        </View>  
+    );
+
+}
+
+function StockAlert({ data } : any) {
+
+    const remains = data.stock - data.sold;
+    const percentRemains = (remains / data.stock) * 100;
+
+    const message = () => {
+        if(remains > 1) {
+            return "Restam " + remains + " unidades."
+        } else if (remains > 0) {
+            return "Resta 1 unidade."
+        } else {
+            return "O produto acabou."
+        }
+    }    
+
+    return(
+        <View style = { styles.stockAlertItem }>
+            <Image source = { require("@/assets/images/food-default.jpg") } style = { styles.stockAlertImage }/>
+            <View style = {{ width: "100%", paddingRight: 85 }}>
+                <View style = {{ gap: 3, marginBottom: 3 }}>
+                    <Text style = {{ fontSize: 18, fontFamily: "Inter_400Regular"}}>{ data.name }</Text>
+                    <ProgressBar value = { percentRemains }/>                                    
+                </View>                
+                <Text style = {{ fontSize: 12, color: "#959595", fontFamily: "Inter_400Regular" }}>{ message() }</Text>               
+            </View>
+        </View>
+    );
+
 }
 
 const styles = StyleSheet.create({
@@ -133,9 +199,16 @@ const styles = StyleSheet.create({
         alignItems: "center",    
     },
 
+    scrollViewContainer: { 
+        alignItems: "center", 
+        justifyContent: "center", 
+        height: "100%", 
+        marginVertical: 70 
+    },
+
     chartContainer: {
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",        
     },
 
     chartTextBackground: {
@@ -150,7 +223,7 @@ const styles = StyleSheet.create({
         fontFamily: "Inter_400Regular",
     },
 
-    flatListContainer: {
+    salesList: {
         marginTop: 12,
         height: 192,
         backgroundColor: "#D9D9D9",
@@ -159,7 +232,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
 
-    item: {
+    saleItem: {
         flexDirection: "row",
         justifyContent: "space-between",  
         borderBottomWidth: 1,
@@ -168,9 +241,27 @@ const styles = StyleSheet.create({
         alignItems: "center"
     },
 
-    itemText: {
+    saleItemText: {
         fontSize: 15,
         fontFamily: "Inter_400Regular",                         
+    },
+
+    stockAlertItem: { 
+        backgroundColor: "#FFFFFF", 
+        height: 72, 
+        marginBottom: 7, 
+        borderRadius: 5, 
+        flexDirection: "row", 
+        alignItems: "center"
+    },
+
+    stockAlertImage: {
+        width: 65, 
+        height: 65, 
+        resizeMode: "cover", 
+        borderRadius: 2, 
+        marginLeft: 3, 
+        marginRight: 6
     }
 
 });
