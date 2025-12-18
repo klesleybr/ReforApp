@@ -17,15 +17,17 @@ export default function ProgressBar({ value, decimalDigits, backgroundColor} : P
     const percentWidth : DimensionValue  = `${value}%`;
     const percent = value.toFixed(decimalDigits ? decimalDigits : 0) + "%";
 
-    return(
-        <View style = { styles.container }>
-            <View style = {[styles.progress, { backgroundColor: progressColor(), borderColor: progressColor(), width: percentWidth, paddingHorizontal: percent !== "0%" ? "10%" : 0 }]}>
-                {
-                    percent !== "0%" ? <Text style = { styles.text }>{ percent }</Text> : null
-                }
+    if(value > 0) {
+        return(
+            <View style = { styles.container }>
+                <View style = {{ ...styles.progress, backgroundColor: progressColor(), width: percentWidth, borderRadius: value === 100 ? 6 : undefined }}>
+                    <Text style = { styles.text }>{ percent }</Text> 
+                </View>
             </View>
-        </View>
-    );
+        );
+    }
+
+    return;
 
 }
 
@@ -33,28 +35,24 @@ const styles = StyleSheet.create({
 
     container: {
         width: "100%",
-        backgroundColor: "#FFFFFF", 
-        borderRadius: 3, 
-        height: 18,
-        borderWidth: 0.5,
-        borderColor: "#000000"        
+        backgroundColor: "#e7e7e7ff", 
+        borderRadius: 6, 
+        height: 18,              
     },
 
     progress: {
         height: "100%",
         alignItems: "center",
-        justifyContent: "center",
-        //borderTopRightRadius: 3,
-        //borderBottomRightRadius: 3,
-        borderRadius: 3,
-        //borderWidth: 0.5,        
+        justifyContent: "center",                
+        borderTopLeftRadius: 6,
+        borderBottomLeftRadius: 6,
+        paddingHorizontal: "10%",              
     },
 
     text: {
         fontSize: 13,
         fontFamily: "Inter_400Regular",
-        color: "#FFFFFF",
-        
+        color: "#FFFFFF",        
     }
 
 });

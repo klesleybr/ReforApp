@@ -94,23 +94,27 @@ export default function HomeScreen() {
             <SafeAreaView style = { [styles.container, { backgroundColor: colors.background }] }>
                 <Header iconType="menu"/>
 
-                <ScrollView showsVerticalScrollIndicator = { false } contentContainerStyle = {{ alignItems: "center", justifyContent: "center", height: "100%", marginVertical: 70  }} style = {{ width: "100%" }}>
+                <ScrollView 
+                    showsVerticalScrollIndicator = { false } 
+                    contentContainerStyle = { styles.scrollViewContainer } 
+                    style = {{ width: "100%" }}
+                >
                     <View>
                         <View style = { styles.chartContainer }>
                             <PieChart 
-                                data={chartData}                                         
+                                data = { chartData }
                                 donut 
                                 showTooltip 
-                                innerCircleColor={colors.background}
-                                textSize={22}
-                                font="Inter_400Regular"
-                                textBackgroundColor="transparent"
-                                innerRadius={90}
-                                paddingHorizontal={10}
-                                animationDuration={1000}
+                                innerCircleColor = { colors.background }
+                                textSize = { 22 }
+                                font = "Inter_400Regular"
+                                textBackgroundColor = "transparent"
+                                innerRadius = { 90 }
+                                paddingHorizontal = { 10 }
+                                animationDuration = { 1000 }
                                 isAnimated
-                                labelLineConfig={{length: 30}}
-                                tooltipDuration={1000}                    
+                                labelLineConfig={{ length: 30 }}
+                                tooltipDuration={ 1000 }                    
                                 />
                             <Text style = { styles.chartTextBackground }>{ decimalStyle.format(goalData[0].value) }</Text>
                         </View>                    
@@ -118,22 +122,22 @@ export default function HomeScreen() {
                     </View>
 
                     <View style = {{ width: "90%", marginTop: 24 }}>
-                        <Text style = {[ styles.hint, { fontSize: 18, marginLeft: 23 }]}>Vendas do dia</Text>
+                        <Text style = {{ ...styles.hint, fontSize: 18, marginLeft: 23 }}>Vendas do dia</Text>
                         <FlatList                         
                             showsVerticalScrollIndicator = { false }                                                 
                             data = { saleData } 
-                            style = { styles.flatListContainer }
+                            style = { styles.salesList }
                             renderItem={({ item }) => <Sale data = { item }/>}
                         />                                    
                     </View>
 
                     <View style = {{ width: "90%", marginTop: 24 }}>
-                        <Text style = {[ styles.hint, { fontSize: 18, marginLeft: 23 }]}>Situação do estoque</Text>
+                        <Text style = {{ ...styles.hint, fontSize: 18, marginLeft: 23 }}>Situação do estoque</Text>
                         <FlatList
                             showsVerticalScrollIndicator = { false }
                             data = { stockData }
                             style = {{ marginTop: 12 }}
-                            renderItem = { ({item}) => <StockAlert data = { item }/> }
+                            renderItem = { ({ item }) => <StockAlert data = { item }/> }
                         />                
                     </View> 
                 </ScrollView>                               
@@ -147,11 +151,11 @@ export default function HomeScreen() {
 function Sale({ data } : any) {
 
     return(
-        <View style = { styles.item }>
+        <View style = { styles.saleItem }>
             <Entypo name = "triangle-right" style = {{ marginRight: 5 }}></Entypo>
-            <Text style = { [styles.itemText, { width: "20%" }] }>{data.amount + " un."}</Text>
-            <Text style = { [styles.itemText, { width: "80%", textAlign: "center", paddingHorizontal:"5%" }] } numberOfLines={1}>{data.name}</Text>                                    
-            <Text style = { [styles.itemText, { width: "25%", textAlign: "right" }] }>{ decimalStyle.format(data.amount * data.price) }</Text>                                    
+            <Text style = {{ ...styles.saleItemText, width: "20%" }}>{ data.amount + " un." }</Text>
+            <Text style = {{ ...styles.saleItemText, width: "80%", textAlign: "center", paddingHorizontal:"5%" }} numberOfLines={ 1 }>{ data.name }</Text>                                    
+            <Text style = {{ ...styles.saleItemText, width: "25%", textAlign: "right" }}>{ decimalStyle.format(data.amount * data.price) }</Text>                                    
         </View>  
     );
 
@@ -170,15 +174,17 @@ function StockAlert({ data } : any) {
         } else {
             return "O produto acabou."
         }
-    }
+    }    
 
     return(
-        <View style = {{ backgroundColor: "#FFFFFF", height: 72, marginBottom: 7, borderRadius: 5, flexDirection: "row", alignItems: "center" }}>
-            <Image source = { require("@/assets/images/food-default.jpg") } style = {{ width: 53, height: 53, resizeMode: "cover", borderRadius: 2, marginHorizontal: 9 }}/>
-            <View style = {{ width: "100%", paddingRight: 85}}>
-                <Text style = {{ fontSize: 18, fontFamily: "Inter_400Regular"}}>{ data.name }</Text>
-                <ProgressBar value = { percentRemains }/>                                    
-                <Text style = {{ fontSize: 11, color: "#959595" }}>{ message() }</Text>               
+        <View style = { styles.stockAlertItem }>
+            <Image source = { require("@/assets/images/food-default.jpg") } style = { styles.stockAlertImage }/>
+            <View style = {{ width: "100%", paddingRight: 85 }}>
+                <View style = {{ gap: 3, marginBottom: 3 }}>
+                    <Text style = {{ fontSize: 18, fontFamily: "Inter_400Regular"}}>{ data.name }</Text>
+                    <ProgressBar value = { percentRemains }/>                                    
+                </View>                
+                <Text style = {{ fontSize: 12, color: "#959595", fontFamily: "Inter_400Regular" }}>{ message() }</Text>               
             </View>
         </View>
     );
@@ -191,6 +197,13 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",    
+    },
+
+    scrollViewContainer: { 
+        alignItems: "center", 
+        justifyContent: "center", 
+        height: "100%", 
+        marginVertical: 70 
     },
 
     chartContainer: {
@@ -210,7 +223,7 @@ const styles = StyleSheet.create({
         fontFamily: "Inter_400Regular",
     },
 
-    flatListContainer: {
+    salesList: {
         marginTop: 12,
         height: 192,
         backgroundColor: "#D9D9D9",
@@ -219,7 +232,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
 
-    item: {
+    saleItem: {
         flexDirection: "row",
         justifyContent: "space-between",  
         borderBottomWidth: 1,
@@ -228,9 +241,27 @@ const styles = StyleSheet.create({
         alignItems: "center"
     },
 
-    itemText: {
+    saleItemText: {
         fontSize: 15,
         fontFamily: "Inter_400Regular",                         
+    },
+
+    stockAlertItem: { 
+        backgroundColor: "#FFFFFF", 
+        height: 72, 
+        marginBottom: 7, 
+        borderRadius: 5, 
+        flexDirection: "row", 
+        alignItems: "center"
+    },
+
+    stockAlertImage: {
+        width: 65, 
+        height: 65, 
+        resizeMode: "cover", 
+        borderRadius: 2, 
+        marginLeft: 3, 
+        marginRight: 6
     }
 
 });
