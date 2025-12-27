@@ -1,14 +1,9 @@
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-
 import { View, Text, StyleSheet, FlatList, ScrollView, Image } from "react-native";
-
 import { useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
-
 import { PieChart } from "react-native-gifted-charts";
-
 import Entypo from '@expo/vector-icons/Entypo';
-
 import ProgressBar from "@/components/progress-bar";
 
 

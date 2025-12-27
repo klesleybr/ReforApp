@@ -11,13 +11,20 @@ export default function Header({ iconType } : IconType) {
 
     const colors = useTheme().colors;
     const navigation = useNavigation();    
+
     return(
     <View style = { [{ backgroundColor: colors.primary }, styles.container] }>
             <Ionicons 
                 name = { iconType } 
                 color = "#FFFFFF"
                 size = { 24 } 
-                onPress = { () => navigation.dispatch(DrawerActions.openDrawer()) } 
+                onPress = { () => {
+                    if(iconType === "menu") {
+                        return navigation.dispatch(DrawerActions.openDrawer());
+                    } else {
+                        return navigation.goBack();
+                    }
+                } } 
                 style = { styles.button} 
             />                       
             <Logo/>
@@ -34,7 +41,7 @@ const styles = StyleSheet.create({
         height: 50,
         justifyContent: "center",
         alignItems: "center",
-        position: "static",
+        position: "relative",
         top: 0
     },
     
