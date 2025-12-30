@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
-        top: 0
+        top: 0,
+        zIndex: 1
     },
     
     text: {

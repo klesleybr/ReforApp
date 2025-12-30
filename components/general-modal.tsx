@@ -1,9 +1,13 @@
-import React, { ReactNode } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { db } from "@/config/firebaseConfig";
 
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import type { DimensionValue, InputModeOptions } from "react-native";
+import type { Product } from "@/types/definitions";
+import Decimal from "decimal.js";
 
 type Props = {
     type?: "stock" | "confirmation",
@@ -29,6 +33,57 @@ export default function GeneralModal({ type = "stock", isOpen = false, setIsOpen
 }
 
 function StockModal({ isOpen, setIsOpen } : Props) {
+
+    const [priceString, setPriceString] = useState<string>("0");
+    const [costString, setCostString] = useState<string>("0");
+
+    const [product, setProduct] = useState<Product>({
+        name: "",
+        amount: 0,
+        status: true,
+        price: 0,
+        sold: 0,
+        cost: 0,
+        description: "",
+        createdAt: undefined,
+        updatedAt: undefined
+    });
+
+    const formatDecimal = (value : string, prev : string, attribute : "cost" | "price") => {
+        
+        if(value === "," || value === ".") {
+            if(prev === "")
+                return "0."
+            if(!prev.includes("."))
+                return prev + ".";
+        } else if(!isNaN(Number(value))) {
+            if(attribute === "cost") {
+                if(value !== "") {
+                    setProduct({ ...product, cost: Number(value)});
+                } else {
+                    setProduct({ ...product, cost: Number(value)});
+                }
+            } else if(attribute === "price") {
+                if(value !== "") {
+                    setProduct({ ...product, price: Number(value)});
+                } else {
+                    setProduct({ ...product, price: Number(value)});
+                }
+            }                            
+            return value;
+        }                                        
+        return prev;
+
+    }
+
+    const addProduct = async () => {
+        try {                        
+            const add = await addDoc(collection(db, "products"), { ...product, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+            console.log("Produto adicionado com sucesso", product);
+        } catch(e) {
+            console.log("Erro ao adicionar o produto: " + e);
+        }        
+    }
     
     return(
         <View style = { styles.container }>
@@ -36,42 +91,70 @@ function StockModal({ isOpen, setIsOpen } : Props) {
                 <MaterialCommunityIcons name = "close-thick" onPress={ () => setIsOpen(false)} color = "#6D0808" size = { 24 } style = { styles.closeIcon } />
                 <Text style = { styles.title }>Novo Produto</Text>
                 <Text style = { styles.hint }>Preencha as informações abaixo para adicionar um produto ao estoque.</Text>
+                
                 <View style = { styles.textInputContainer }>
-                    <TextInputCustom title = "Nome" width = { "70%" }/>
-                    <TextInputCustom title = "Quantidade" width = { "30%" } inputMode = "numeric"/>
+                    <View style = {{ gap: 8, width: "70%" }}>
+                        <Text style = { styles.titleTextInput }>Nome</Text>
+                        <TextInput style = {{ ...styles.textInput }} value = { product?.name } onChangeText = { (value) => setProduct({ ...product, name: value }) } />
+                    </View>                    
+                    <View style = {{ gap: 8, width: "30%" }}>
+                        <Text style = { styles.titleTextInput }>Quantidade</Text>
+                        <TextInput 
+                            style = { styles.textInput } 
+                            value = { product?.amount?.toString() } 
+                            onChangeText= { 
+                                (value) => {
+                                    if(!isNaN(Number(value))) {
+                                        return setProduct(() => {
+                                            if(!isNaN(Number(value))) 
+                                                return { ...product, amount: Number(value) }
+                                            return { ...product, amount: 0 }
+                                        }); 
+                                    }
+                                    return;
+                                }
+                            } 
+                            inputMode = "numeric" />
+                    </View>                    
                 </View>
+
                 <View style = {{ ... styles.textInputContainer, marginVertical: 10 }}>
-                    <TextInputCustom title = "Custo Unitário" width = { "50%" } inputMode = "decimal" />
-                    <TextInputCustom title = "Preço Unitário" width = { "50%" } inputMode = "decimal" />
+                    <View style = {{ gap: 8, width: "50%" }}>
+                        <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Custo Unitário</Text>
+                        <TextInput 
+                            style = {{ ...styles.textInput }} 
+                            value = { costString }
+                            onChangeText= { (value) => setCostString((prev) => formatDecimal(value, prev, "cost")) }
+                            inputMode = "decimal" 
+                        />
+                    </View>                     
+                    <View style = {{ gap: 8, width: "50%" }}>
+                        <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Preço Unitário</Text>
+                        <TextInput 
+                            style = {{ ...styles.textInput }}
+                            value = { priceString }
+                            onChangeText = { (value) => setPriceString((prev => formatDecimal(value, prev, "price"))) } 
+                            inputMode = "decimal" 
+                        />
+                    </View> 
                 </View>
+
                 <View style = { styles.textInputContainer }>
-                    <TextInputCustom title = "Descrição" width = { "100%" } height= { 80 } multiline = { true }/>
+                    <View style = {{ gap: 8, width: "101%" }}>
+                        <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Descrição</Text>
+                        <TextInput 
+                            style = {{ ...styles.textInput, height: 80 }} 
+                            multiline = { true }
+                            value = { product?.description || "" }
+                            onChangeText = { (value) => setProduct({ ...product, description: value }) }
+                        />
+                    </View> 
                 </View>
                 
-                <TouchableOpacity style = { styles.button } onPress={ () => setIsOpen(false) }>
+                <TouchableOpacity style = { styles.button } onPress={ () =>  addProduct() }>
                     <Text style = { styles.buttonText }>Adicionar</Text>
                 </TouchableOpacity>
             </View>            
-        </View>
-    );
-
-}
-
-function TextInputCustom({ title, width = undefined, height = 35, inputMode = undefined, multiline = false } : TextInputCustomProps) {
-
-    return(
-        <View style = {{ width: width, gap: 8 }}>
-            <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>{ title }</Text>
-            <TextInput 
-                style = {{ 
-                    backgroundColor: "#E9E9E9", 
-                    height: height, 
-                    borderRadius: 3, 
-                    paddingHorizontal: 13 
-                }} 
-                inputMode = { inputMode }
-                multiline = { multiline }
-            />
         </View>
     );
 
@@ -116,11 +199,24 @@ const styles = StyleSheet.create({
     },
 
     textInputContainer: {
-        flexDirection: "row",
-        gap: 9,
-        alignItems: "center",
-        justifyContent: "center",
-        width: "90%"
+        flexDirection: "row", 
+        width: "90%", 
+        gap: 9, 
+        alignItems: "center", 
+        justifyContent: "center"
+    },
+
+    titleTextInput: {
+        fontFamily: "Inter_700Bold", 
+        fontSize: 10, 
+        marginLeft: 15
+    },
+
+    textInput: {
+        backgroundColor: "#E9E9E9", 
+        height: 35, 
+        borderRadius: 3, 
+        paddingHorizontal: 13
     },
 
     button: {
