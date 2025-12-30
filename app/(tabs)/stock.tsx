@@ -179,10 +179,16 @@ const sectionProducts = [
     },
 ]
 
+type SectionProduct = {
+    category: string,
+    products: any[]
+}
+
 export default function StockScreen() {
 
     const [visibleModal, setVisibleModal] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
+    const [sp, setSp ] = useState<any[]>([]);
     const { colors } = useTheme();
 
     const getData = async () => {
@@ -195,38 +201,43 @@ export default function StockScreen() {
         return querySnapshot.docs;
     }
 
-    useEffect(() => {
-
-        const query = async () => {
-            const querySnapshot = await getDocs(collection(db, "products"));
-            if(querySnapshot.empty)
+    const query = async () => {
+            const productsQuery = await getDocs(collection(db, "products"));
+            if(productsQuery.empty)
                 return;
             
-            const docs = querySnapshot.docs;
-            if(products.length > 0) setProducts([]);            
-            docs.forEach((value) => setProducts((prev) => {                
-                prev.push({                    
-                    name: String(value.get("name")) || "",
-                    description: String(value.get("description")) || "",
-                    amount: Number(value.get("amount")),
-                    cost: Number(value.get("cost")),
-                    price: Number(value.get("price")),
-                    sold: Number(value.get("sold")),
-                    status: value.get("status"),
-                    createdAt: value.get("createdAt") || undefined,
-                    updatedAt: value.get("updatedAt") || undefined
-                });
+            const productsData = productsQuery.docs; 
+            if(products.length > 0) setProducts([]);
+            productsData.forEach((value) => setProducts((prev) => {                
+                prev.push(
+                    {                
+                        name: value.get("name") as string,
+                        description: value.get("description") as string,
+                        price: value.get("price") as number,
+                        cost: value.get("cost") as number,
+                        amount: value.get("amount") as number,
+                        sold: value.get("sold") as number,
+                        status: value.get("status") as boolean,
+                        createdAt: value.get("createdAt") as Timestamp,
+                        updatedAt: value.get("updatedAt") as Timestamp
+                    }
+                );
                 return prev;
-            }));
+            }))
         }
-
-        //query();
-        console.log(products);
-
+        
+    useEffect(() => {
+        query()
     }, []);
 
+    useEffect(() => {        
+
+        query();        
+
+    }, [products, setProducts]);
+
     const calculateAmount = (amount : number | undefined, sold : number | undefined) => {
-        if(amount && sold) 
+        if(amount !== undefined && sold !== undefined) 
             return (amount - sold).toString();
         return "Quantidades armazenadas e/ou vendidas não encontradas";
     }
@@ -258,11 +269,11 @@ export default function StockScreen() {
             <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
                 <Header iconType="arrow-back"/>
                 <Modal transparent = { true } visible = { visibleModal }>
-                    <GeneralModal isOpen = { visibleModal } setIsOpen= { setVisibleModal } />
+                    <GeneralModal isOpen = { visibleModal } setIsOpen= { setVisibleModal } onSubmit={ () => query() } />
                 </Modal>
                 <View style = {{ width: "90%", flex: 1, justifyContent: "center",  }}>
                     {
-                        stockA.length === 0 ? (
+                        products.length === 0 ? (
                             <View style = {{ alignItems: "center", justifyContent: "center" }}>
                                 <Text style = { styles.emptyTitle }>Nenhum produto foi registrado</Text>
                                 <Text style = { styles.emptySubtitle }>Aperte no botão abaixo para adicionar um produto.</Text>
@@ -271,13 +282,12 @@ export default function StockScreen() {
                                 </TouchableOpacity>
                             </View>
                         ) : (
-                            <View style = {{ flex: 1, marginBottom: 23 }}>
+                            <View style = {{ flex: 1, marginBottom: 23 }}>                                
                                 <View style = {{height: "100%"}}>
-                                    <SectionList 
-                                        
-                                        style ={{  }}
+                                    <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 22, textAlign: "center", marginVertical: 23 }}>Todos os Produtos</Text>
+                                    <FlatList
                                         showsVerticalScrollIndicator = { false }
-                                        sections={ sectionProducts }                                    
+                                        data = { products }                                    
                                         renderItem = { ({ item }) => {
                                             return(
                                                 <View style ={{ flexDirection: "row", alignItems: "center", width: "100%",  paddingVertical: 6, backgroundColor: "#FFFFFF", borderRadius: 5, marginBottom: 6, shadowColor: "#000000", shadowOffset: { width: 0, height: 3}, shadowOpacity: 0.1,  paddingLeft: 7}}> 
@@ -300,10 +310,7 @@ export default function StockScreen() {
                                                     </View>
                                                     
                                             );
-                                        }} 
-                                        renderSectionHeader={({section: {category}}) => (
-                                            <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 22, textAlign: "center", marginVertical: 23}}>{category}</Text>
-                                        )}                                
+                                        }}                                                                       
                                     />
                                 </View>
                                 <View style = { styles.floatAddButton }>
@@ -312,12 +319,7 @@ export default function StockScreen() {
                             </View>                            
                         )
                     }                    
-                </View>
-                {/*<View style  ={{ backgroundColor: "transparent" }}>
-                    <TouchableOpacity onPress={ () => null }>
-                        <Text>Ver dados</Text>
-                    </TouchableOpacity>
-                </View>*/}
+                </View>               
             </SafeAreaView>
         </SafeAreaProvider>
 

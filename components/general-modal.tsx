@@ -13,6 +13,7 @@ type Props = {
     type?: "stock" | "confirmation",
     isOpen: boolean,
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>,
+    onSubmit?: () => void,
 }
 
 type TextInputCustomProps = {
@@ -25,14 +26,14 @@ type TextInputCustomProps = {
     multiline?: boolean
 }
 
-export default function GeneralModal({ type = "stock", isOpen = false, setIsOpen } : Props) {
+export default function GeneralModal({ type = "stock", isOpen = false, setIsOpen, onSubmit } : Props) {
 
     if(type === "stock" || type === undefined)
-        return <StockModal isOpen = { isOpen } setIsOpen= { setIsOpen } />;
+        return <StockModal isOpen = { isOpen } setIsOpen= { setIsOpen } onSubmit={ onSubmit } />;
 
 }
 
-function StockModal({ isOpen, setIsOpen } : Props) {
+function StockModal({ isOpen, setIsOpen, onSubmit } : Props) {
 
     const [priceString, setPriceString] = useState<string>("0");
     const [costString, setCostString] = useState<string>("0");
@@ -79,6 +80,8 @@ function StockModal({ isOpen, setIsOpen } : Props) {
     const addProduct = async () => {
         try {                        
             const add = await addDoc(collection(db, "products"), { ...product, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+            onSubmit;
+            setIsOpen(false);
             console.log("Produto adicionado com sucesso", product);
         } catch(e) {
             console.log("Erro ao adicionar o produto: " + e);
