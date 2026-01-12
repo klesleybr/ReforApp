@@ -17,7 +17,7 @@ export default function AuthScreen({ navigation } : StackNavigatorProps) {
     const [user, setUser] = useState<User | undefined>(undefined);
 
     const login = async () => await signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
+        .then((userCredential) => {            
             setUser(userCredential.user);
             setPassword("");
             navigation.navigate("Home");
