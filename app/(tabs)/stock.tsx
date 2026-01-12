@@ -9,12 +9,14 @@ import Header from "@/components/header";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
 import GeneralModal from "@/components/general-modal";
 
-import { getFirestore, doc, getDoc, getDocs, collection, Timestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, getDocs, collection, Timestamp, deleteDoc } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 import { Product } from "@/types/definitions";
 
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AddButton from "@/components/add-button";
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 const stock : Product[] = [
 
@@ -158,6 +160,36 @@ const stockA : Product[]  = [
         updatedAt: Timestamp.now()
     },
 
+    {
+        name: "Coxinha",
+        description: undefined,    
+        category: {
+            name: "Alimentos"
+        },    
+        amount: 20,
+        sold: 2,
+        cost: 3,
+        price: 6.50,
+        status: true,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+    },
+
+    {
+        name: "Sorvete de morango",
+        description: undefined,    
+        category: {
+            name: "Gelados"
+        },    
+        amount: 20,
+        sold: 2,
+        cost: 3,
+        price: 6.50,
+        status: true,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+    },
+
 ]
 
 const sectionProducts = [
@@ -188,7 +220,7 @@ export default function StockScreen() {
 
     const [visibleModal, setVisibleModal] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
-    const [sp, setSp ] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const { colors } = useTheme();
 
     const getData = async () => {
@@ -202,37 +234,64 @@ export default function StockScreen() {
     }
 
     const query = async () => {
-            const productsQuery = await getDocs(collection(db, "products"));
-            if(productsQuery.empty)
-                return;
-            
-            const productsData = productsQuery.docs; 
-            if(products.length > 0) setProducts([]);
-            productsData.forEach((value) => setProducts((prev) => {                
-                prev.push(
-                    {                
-                        name: value.get("name") as string,
-                        description: value.get("description") as string,
-                        price: value.get("price") as number,
-                        cost: value.get("cost") as number,
-                        amount: value.get("amount") as number,
-                        sold: value.get("sold") as number,
-                        status: value.get("status") as boolean,
-                        createdAt: value.get("createdAt") as Timestamp,
-                        updatedAt: value.get("updatedAt") as Timestamp
-                    }
-                );
-                return prev;
-            }))
+        const productsQuery = await getDocs(collection(db, "products"));
+        if(productsQuery.empty)
+            return;
+        
+        const productsData = productsQuery.docs; 
+        if(products.length > 0) setProducts([]);
+        productsData.forEach((value) => setProducts((prev) => {                
+            prev.push(
+                {                
+                    name: value.get("name") as string,
+                    description: value.get("description") as string,
+                    price: value.get("price") as number,
+                    cost: value.get("cost") as number,
+                    amount: value.get("amount") as number,
+                    sold: value.get("sold") as number,
+                    status: value.get("status") as boolean,
+                    createdAt: value.get("createdAt") as Timestamp,
+                    updatedAt: value.get("updatedAt") as Timestamp
+                }
+            );
+            return prev;
+        }));
+    }
+
+    const getCategories = async () => {
+        const categoriesSnapshot = await getDocs(collection(db, "categories"));
+        if(categoriesSnapshot.empty) {
+            console.log("Nenhum dado foi encontrado");
+            return;
         }
+            
+        const categoriesData = categoriesSnapshot.docs;
+        setCategories((prev) => {
+            if(prev.length > 0) prev = [];
+            categoriesData.forEach((value) => {
+                prev.push({ name: value.get("name"), description: value.get("description") });
+            });
+            return prev;
+        });
+        console.log(categories);
+    }
+
+    const deleteProduct = async (id : string) => {
+        try {
+            await deleteDoc(doc(db, "products", id));
+            console.log("Produto deletado com sucesso");
+        } catch(e) {
+            console.log("Erro ao deletar produto do banco de dados:", e);
+        }
+    }
         
     useEffect(() => {
-        query()
+        //query()
     }, []);
 
     useEffect(() => {        
 
-        query();        
+        //query();        
 
     }, [products, setProducts]);
 
@@ -269,11 +328,11 @@ export default function StockScreen() {
             <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
                 <Header iconType="arrow-back"/>
                 <Modal transparent = { true } visible = { visibleModal }>
-                    <GeneralModal isOpen = { visibleModal } setIsOpen= { setVisibleModal } onSubmit={ () => query() } />
+                    <GeneralModal isOpen = { visibleModal } setIsOpen= { setVisibleModal } onSubmit={ () => null } />
                 </Modal>
                 <View style = {{ width: "90%", flex: 1, justifyContent: "center",  }}>
                     {
-                        products.length === 0 ? (
+                        stockA.length === 0 ? (
                             <View style = {{ alignItems: "center", justifyContent: "center" }}>
                                 <Text style = { styles.emptyTitle }>Nenhum produto foi registrado</Text>
                                 <Text style = { styles.emptySubtitle }>Aperte no botão abaixo para adicionar um produto.</Text>
@@ -287,27 +346,39 @@ export default function StockScreen() {
                                     <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 22, textAlign: "center", marginVertical: 23 }}>Todos os Produtos</Text>
                                     <FlatList
                                         showsVerticalScrollIndicator = { false }
-                                        data = { products }                                    
+                                        data = { stockA }                                    
                                         renderItem = { ({ item }) => {
                                             return(
-                                                <View style ={{ flexDirection: "row", alignItems: "center", width: "100%",  paddingVertical: 6, backgroundColor: "#FFFFFF", borderRadius: 5, marginBottom: 6, shadowColor: "#000000", shadowOffset: { width: 0, height: 3}, shadowOpacity: 0.1,  paddingLeft: 7}}> 
-                                                    <Image source={ chooseImage(item.category ? item.category.name : "")} style = {{ width: 65, height: 65, resizeMode: "cover", borderRadius: 2, marginRight: 7 }}></Image>
-                                                    <View>
-                                                            <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 18}}>{ item.name }</Text>
-                                                            <View style ={{ flexDirection: "row"}}> 
-                                                                <Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade: </Text>
-                                                                <Text style = {{ fontFamily: "Inter_400Regular"}}>{ calculateAmount(item.amount, item.sold) }</Text>
-                                                            </View>
-                                                            {
-                                                                reposition(item.amount, item.sold) ? (
-                                                                    <View style = {{ flexDirection: "row", alignItems: "center", gap: 2, marginTop: 6 }}>
-                                                                        <FontAwesome name="circle" size={7} color="#770E0E" />
-                                                                        <Text style = {{ fontFamily: "Inter_400Regular", color: "rgba(0, 0, 0, 0.5)", fontSize: 10 }}>O produto necessita de reposição!</Text>
-                                                                    </View>
-                                                                ) : null
-                                                            }
+                                                <View style ={{ flexDirection: "row", alignItems: "center", justifyContent: 'space-between', width: "100%",  paddingVertical: 6, backgroundColor: "#FFFFFF", borderRadius: 5, marginBottom: 6, shadowColor: "#000000", shadowOffset: { width: 0, height: 3}, shadowOpacity: 0.1, shadowRadius: 4, paddingLeft: 7, paddingRight: 20}}> 
+                                                    <View style = {{ flexDirection: "row", alignItems: "center", width: "80%"}}>
+                                                        <Image source={ chooseImage(item.category ? item.category.name : "")} style = {{ width: 65, height: 65, resizeMode: "cover", borderRadius: 2, marginRight: 7 }}></Image>
+                                                        <View>
+                                                                <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 18 }} numberOfLines = {1} lineBreakMode="tail">{ item.name }</Text>
+                                                                <View style ={{ flexDirection: "row"}}> 
+                                                                    <Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade: </Text>
+                                                                    <Text style = {{ fontFamily: "Inter_400Regular"}}>{ calculateAmount(item.amount, item.sold) }</Text>
+                                                                </View>
+                                                                {
+                                                                    reposition(item.amount, item.sold) ? (
+                                                                        <View style = {{ flexDirection: "row", alignItems: "center", gap: 2, marginTop: 6 }}>
+                                                                            <FontAwesome name="circle" size={7} color="#770E0E" />
+                                                                            <Text style = {{ fontFamily: "Inter_400Regular", color: "rgba(0, 0, 0, 0.5)", fontSize: 10 }}>O produto necessita de reposição!</Text>
+                                                                        </View>
+                                                                    ) : null
+                                                                }
                                                         </View>
                                                     </View>
+                                                    
+                                                    <View style = {{ flexDirection: "row", gap: 15 }}>
+                                                        <TouchableOpacity>
+                                                            <Feather name="edit-2" size={24} color="black" onPress={() => null} />
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity style = {{ backgroundColor: "#6D0808", padding: 4, borderRadius: 4 }}>
+                                                            <FontAwesome6 name="trash" size={18} color="white" />
+                                                        </TouchableOpacity>
+
+                                                    </View>
+                                                </View>
                                                     
                                             );
                                         }}                                                                       
@@ -365,9 +436,8 @@ const styles = StyleSheet.create({
 
     floatAddButton: {
         position: "absolute",
-        bottom: 50,
-        right: 34,
-        
+        bottom: 10,
+        alignSelf: "center"
         //shadowColor: "#000000", shadowOffset: { width: 0, height: 3}, shadowOpacity: 0.1
     },
 

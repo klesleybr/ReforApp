@@ -4,16 +4,20 @@ import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Entypo from '@expo/vector-icons/Entypo';
 
 import type { DimensionValue, InputModeOptions } from "react-native";
-import type { Product } from "@/types/definitions";
+import type { Category, Product } from "@/types/definitions";
 import Decimal from "decimal.js";
+
+import { Dropdown, MultiSelect } from "react-native-element-dropdown";
 
 type Props = {
     type?: "stock" | "confirmation",
     isOpen: boolean,
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>,
     onSubmit?: () => void,
+    categories?: Category[]
 }
 
 type TextInputCustomProps = {
@@ -26,17 +30,28 @@ type TextInputCustomProps = {
     multiline?: boolean
 }
 
-export default function GeneralModal({ type = "stock", isOpen = false, setIsOpen, onSubmit } : Props) {
+const categoriesMock : Category[] = [
+    { name: "Alimentos", description: ""},
+    { name: "Bebidas" , description: ""},
+    { name: "Outra coisa", description: ""}
+];
+
+export default function GeneralModal({ type = "stock", isOpen = false, setIsOpen, onSubmit, categories } : Props) {
 
     if(type === "stock" || type === undefined)
-        return <StockModal isOpen = { isOpen } setIsOpen= { setIsOpen } onSubmit={ onSubmit } />;
+        return <StockModal isOpen = { isOpen } setIsOpen= { setIsOpen } onSubmit={ onSubmit } categories = { categoriesMock } />;
 
 }
 
-function StockModal({ isOpen, setIsOpen, onSubmit } : Props) {
+function StockModal({ isOpen, setIsOpen, onSubmit, categories } : Props) {
 
+    const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
+    const [categoryName, setCategoryName] = useState<string | undefined>(undefined);
+    const [categoryDescription, setCategoryDescription] = useState<string | undefined>(undefined);
+    const [createCategory, setCreateCategory] = useState<boolean>(false);
     const [priceString, setPriceString] = useState<string>("0");
     const [costString, setCostString] = useState<string>("0");
+    
 
     const [product, setProduct] = useState<Product>({
         name: "",
@@ -86,6 +101,22 @@ function StockModal({ isOpen, setIsOpen, onSubmit } : Props) {
         } catch(e) {
             console.log("Erro ao adicionar o produto: " + e);
         }        
+    }
+
+    const addCategory = async () => {
+        try {            
+            const add = await addDoc(collection(db, "categories"), { 
+                name: categoryName, 
+                description: categoryDescription, 
+                createdAt: Timestamp.now(), 
+                updatedAt: Timestamp.now() 
+            });
+            console.log("Categoria criada com sucesso: ", add.id);
+            setCategoryName("");
+            setCategoryDescription("");
+        } catch(e) {
+            console.log("Erro ao adicionar categoria:", e);
+        }
     }
     
     return(
@@ -142,6 +173,60 @@ function StockModal({ isOpen, setIsOpen, onSubmit } : Props) {
                     </View> 
                 </View>
 
+                {
+                    categories ? (
+                        <View style = {{ width: "90%", marginVertical: 10,   justifyContent: "center" }}>                            
+                            <MultiSelect
+                                data={ categories }
+                                labelField= "name"
+                                valueField= "name"
+                                onChange={(value)=> setSelectedCategories(value)}
+                                placeholder="Selecione uma ou mais categorias"
+                                search = {true}                                
+                                value = { selectedCategories }                                                             
+                            />
+                            
+                        </View>                        
+                    ) : null
+                }
+
+                <View style = {{ width: "90%", marginBottom: 30, }}>
+                    <TouchableOpacity style = {{ flexDirection: "row", alignItems: "center", gap: 3 }} onPress = { () => setCreateCategory((prev) => !prev) }>
+                        <Entypo name = { !createCategory ? "triangle-right" : "triangle-down" } color = { "rgba(0, 0, 0, 0.5)" } />
+                        <Text style = {{ color: "rgba(0, 0, 0, 0.5)" }}>Criação de categoria</Text>                        
+                    </TouchableOpacity>
+                    {
+                            createCategory ? (
+                                <View style = {{ paddingHorizontal: 20, marginTop: 10,  gap: 10 }}>
+                                    <TextInput 
+                                        placeholder="Nome da categoria" 
+                                        style = {{ ...styles.textInput, backgroundColor: "#FFFFFF", borderWidth: 1}}
+                                        placeholderTextColor = { "rgba(0, 0, 0, 0.5)" }
+                                        value = { categoryName }
+                                        onChangeText = { (value) => setCategoryName(value) }
+                                    />
+                                    <TextInput 
+                                        placeholder="Descrição da categoria" 
+                                        style = {{ ...styles.textInput, backgroundColor: "#FFFFFF", borderWidth: 1}}
+                                        placeholderTextColor = { "rgba(0, 0, 0, 0.5)" }
+                                        value = { categoryDescription }
+                                        onChangeText = { (value) => setCategoryDescription(value) }
+                                    />
+                                    <TouchableOpacity 
+                                        style = {{ borderWidth: 1, borderRadius: 5, width: "40%", paddingVertical: 3, marginTop: 5, justifyContent: "center", alignItems: "center", alignSelf: "center", shadowColor: "#000000", shadowOffset: { width: 0, height: 4}, shadowOpacity: 0.2, shadowRadius: 8 }}
+                                        onPress ={ () => {
+                                            addCategory();                                            
+                                            setCreateCategory(false);
+                                            return;
+                                        }}
+                                    >
+                                        <Text>Criar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : null
+                    }
+                </View>
+
                 <View style = { styles.textInputContainer }>
                     <View style = {{ gap: 8, width: "101%" }}>
                         <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Descrição</Text>
@@ -154,8 +239,8 @@ function StockModal({ isOpen, setIsOpen, onSubmit } : Props) {
                     </View> 
                 </View>
                 
-                <TouchableOpacity style = { styles.button } onPress={ () =>  addProduct() }>
-                    <Text style = { styles.buttonText }>Adicionar</Text>
+                <TouchableOpacity style = { styles.button } onPress={ () =>  null }>
+                    <Text style = { styles.buttonText }>Adicionar</Text>                    
                 </TouchableOpacity>
             </View>            
         </View>

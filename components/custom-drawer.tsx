@@ -37,7 +37,7 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
                     /> 
                     <DrawerItem 
                         label = "Vendas" 
-                        onPress={() => null } 
+                        onPress={() => navigation.navigate("Screens", { screen: "Sales" }) } 
                         icon = { () => <FontAwesome name = "usd" color = "#000000" size = { 24 } style = { [styles.icon, { paddingHorizontal: 10}] }/>}   
                         labelStyle = { styles.label }
                         style = { styles.item }                                         

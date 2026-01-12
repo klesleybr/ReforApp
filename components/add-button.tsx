@@ -8,7 +8,7 @@ export default function AddButton({ onPress } : Props) {
 
     return(
         <TouchableOpacity onPress={ onPress } style = { styles.button }>
-            <Text style = { styles.buttonText }>+</Text>
+            <Text style = { styles.buttonText }>Adicionar Produto</Text>
         </TouchableOpacity>
     );
 
@@ -18,8 +18,8 @@ const styles = StyleSheet.create({
 
     button: {
         backgroundColor: "#0E9608",
-        width: 41,
-        height: 41,
+        width: 220,
+        height: 50,
         justifyContent: "center",
         alignItems: "center",
         borderRadius: 10,
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#FFFFFF",
         fontFamily: "Inter_700Bold",
-        fontSize: 28
+        fontSize: 22
     }
 
 });
