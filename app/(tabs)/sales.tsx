@@ -4,8 +4,10 @@ import Header from "@/components/header";
 import { Timestamp } from "firebase/firestore";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Stepper from "@/components/stepper";
+import { useNavigation, useTheme } from "@react-navigation/native";
+import { DrawerNavProps, StackNavigatorProps } from "../_layout";
 
-const products = [
+const products : any[] = [
     {
         product: {
             name: "Pastel de frango",
@@ -66,22 +68,78 @@ const products = [
         },
         amount: 0,
     },
+    {
+        product: {
+            name: "Sorvete de Uva",
+            description: undefined,
+            categories: ["Gelados", "Sorvetes"],
+            status: true,
+            cost: 1,
+            price: 2,
+            amount: 20,
+            sold: 8,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+        },
+        amount: 0,
+    },
+    {
+        product: {
+            name: "Açaí (copo)",
+            description: undefined,
+            categories: ["Gelados", "Sorvetes"],
+            status: true,
+            cost: 2,
+            price: 3.25,
+            amount: 11,
+            sold: 2,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+        },
+        amount: 0,
+    },
+    {
+        product: {
+            name: "Cachorro Quente",
+            description: undefined,
+            categories: ["Alimentos", "Lanches"],
+            status: true,
+            cost: 3,
+            price: 5.50,
+            amount: 30,
+            sold: 8,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+        },
+        amount: 0,
+    },
 ]
 
 
 export default function SalesScreen() {
+
+    const navigation = useNavigation<DrawerNavProps>();
+    const { colors } = useTheme();
 
     const selectImage = (category : string[] | undefined) => {
         if(category?.includes("Alimentos"))
             return require("@/assets/images/food-default.jpg");
         if(category?.includes("Bebidas"))
             return require("@/assets/images/drink-default.jpg");
+        if(category?.includes("Gelados"))
+            return require("@/assets/images/ice-cream-default.jpg")
         return require("@/assets/images/eat-default.jpg");
     }
 
+    const toDetails = () => {
+        const finalList = products.filter(e => e.amount > 0);
+        if(finalList.length > 0)
+            navigation.navigate("SaleDetails", { products: finalList });
+    };
+
     return(
         <SafeAreaProvider>
-            <SafeAreaView style = { styles.container }>
+            <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
                 <Header iconType="arrow-back"/>
                 <ScrollView style = { styles.scrollContainer } contentContainerStyle = { styles.scrollContentContainer } showsVerticalScrollIndicator = { false }>
                     <Text style = { styles.hint }>Selecione os produtos que desejas adicionar à venda. Basta indicar a quantidade desejada.</Text>
@@ -125,7 +183,7 @@ export default function SalesScreen() {
                         } }
                     />
 
-                    <TouchableOpacity style = { styles.nextButton } onPress={ () => console.log(products)}>
+                    <TouchableOpacity style = { styles.nextButton } onPress={ () => toDetails() }>
                         <Text style = { styles.nextButtonTitle }>Avançar</Text>
                     </TouchableOpacity>
                 </ScrollView>
