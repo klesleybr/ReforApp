@@ -13,7 +13,7 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
     const total = () => {
         var i = 0;
         products.forEach(e => {
-            i = i + e.product.price * e.amount;
+            i = i + e.product.unitPrice * e.amount;
         });
         return i;
     };
@@ -48,7 +48,7 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
                                                     <Text style = { styles.itemTitle } numberOfLines={1}>{ item.product.name }</Text>
                                                     <View style = { styles.itemSubtitleContainer }>
                                                         <Text style = {{ ...styles.itemSubtitle, fontFamily: "Inter_700Bold" }}>Preço:</Text>
-                                                        <Text style = { styles.itemSubtitle }>{ decimalStyle.format(item.product.price) }</Text>
+                                                        <Text style = { styles.itemSubtitle }>{ decimalStyle.format(item.product.unitPrice) }</Text>
                                                     </View>
                                                     <View style = { styles.itemSubtitleContainer }>
                                                         <Text style = {{ ...styles.itemSubtitle, fontFamily: "Inter_700Bold" }}>Quantidade:</Text>
@@ -56,7 +56,7 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
                                                     </View>
                                                 </View>
                                             </View>
-                                            <Text style = { styles.total }>{ decimalStyle.format(item.amount * item.product.price) }</Text>                          
+                                            <Text style = { styles.total }>{ decimalStyle.format(item.amount * item.product.unitPrice) }</Text>                          
                                         </View>
                                 ) } />
                             </View> 
@@ -69,7 +69,7 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
 
                             <TouchableOpacity 
                                 style = {{ ...styles.button, backgroundColor: "#0A6D06", marginBottom: 4, marginTop: 25 }}
-                                onPress={ () => navigation.navigate("FinalizeSales") }
+                                onPress={ () => navigation.navigate("FinalizeSales", { totalValue: total() }) }
                             >
                                 <Text style = { styles.buttonText }>Avançar</Text>
                             </TouchableOpacity>

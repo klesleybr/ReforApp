@@ -8,9 +8,10 @@ import { Checkbox } from "@futurejj/react-native-checkbox";
 import Success from "@/assets/images/success.svg";
 import { StackNavigatorProps } from "../_layout";
 
-export default function FinalizeSaleScreen({ navigation } :StackNavigatorProps) {
+export default function FinalizeSaleScreen({ navigation, route } :StackNavigatorProps) {
     
     const { colors } = useTheme();
+    const { totalValue } = route.params;
     const paymentMethodList = [
         { label: "PIX", value: "PIX"},
         { label: "Dinheiro", value: "dinheiro"},        
@@ -69,7 +70,7 @@ export default function FinalizeSaleScreen({ navigation } :StackNavigatorProps) 
                         </View>
                         <View style = { styles.sum }>
                             <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 20 }}>Total:</Text>
-                            <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 20 }}>{ (73).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }</Text>
+                            <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 20 }}>{ (totalValue).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }</Text>
                         </View>
                         {
                                 paymentMethod !== "" ? (

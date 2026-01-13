@@ -36,7 +36,7 @@ type RootParamsList = {
   Stock: undefined;
   Sales: undefined;
   SaleDetails: { products : any[] };
-  FinalizeSales: undefined;
+  FinalizeSales: { totalValue: number };
 }
 export type StackNavigatorProps = NativeStackScreenProps<RootParamsList>;
 export type DrawerNavProps = DrawerNavigationProp<RootParamsList>;
