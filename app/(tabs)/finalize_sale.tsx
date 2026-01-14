@@ -7,18 +7,60 @@ import { Dropdown } from "react-native-element-dropdown";
 import { Checkbox } from "@futurejj/react-native-checkbox";
 import Success from "@/assets/images/success.svg";
 import { StackNavigatorProps } from "../_layout";
+import type { ProductSale } from "./sales";
+import { db } from "@/config/firebaseConfig";
+import { collection, addDoc, doc, updateDoc, increment, Timestamp  } from "firebase/firestore";
 
-export default function FinalizeSaleScreen({ navigation, route } :StackNavigatorProps) {
+export default function FinalizeSaleScreen({ navigation, route } : StackNavigatorProps) {
     
     const { colors } = useTheme();
-    const { totalValue } = route.params;
+    const { selectedProducts, totalValue } = route.params;
     const paymentMethodList = [
-        { label: "PIX", value: "PIX"},
-        { label: "Dinheiro", value: "dinheiro"},        
+        { label: "PIX", value: "PIX" },
+        { label: "Dinheiro", value: "dinheiro" },  
+        { label: "Outro", value : "outro"}      
     ];
     const [paymentMethod, setPaymentMethod] = useState<string>("");
-    const [paid, setPaid] = useState<boolean>(false);
+    const [isPaid, setIsPaid] = useState<boolean>(false);
+    const [customerName, setCustomerName] = useState<string>("");
     const [isFinalized, setIsFinalized] = useState<boolean>(false);
+
+    const incrementSold = async (id : string, amount : number) => {
+        const docRef = doc(db, "products", id);
+        await updateDoc(docRef, {
+            sold: increment(amount)
+        });
+    };
+
+    const submitSale = async () => {
+        try {
+            await addDoc(collection(db, "sales"), {
+                products: selectedProducts.map((e : ProductSale) => {
+                    return {
+                        id: e.product.id,
+                        name: e.product.name,
+                        unitPrice: e.product.unitPrice,
+                        amount: e.amount,
+                        partialTotal: e.partialTotal
+                    }
+                }),
+                totalValue,
+                customerName,
+                paymentMethod,
+                isPaid,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now()
+            });
+
+            selectedProducts.forEach((e : ProductSale) => {
+                incrementSold(e.product.id, e.amount);
+            });
+
+            setIsFinalized(true);
+        } catch(e) {
+            console.log("Erro ao registrar venda:", e);
+        }
+    };
 
 
     return(
@@ -36,7 +78,7 @@ export default function FinalizeSaleScreen({ navigation, route } :StackNavigator
                         <View style = { styles.form }>
                             <View>
                                 <Text style = { styles.label }>Nome do comprador <Text style = { styles.required }>*</Text></Text>
-                                <TextInput style = { styles.textInput }/>
+                                <TextInput style = { styles.textInput } value = { customerName } onChangeText = { (value) => setCustomerName(value) } />
                             </View>
                             <View style = {{ flexDirection: "row", justifyContent: "space-between" }}>
                                 <View style = {{ width: "40%" }}>
@@ -73,12 +115,12 @@ export default function FinalizeSaleScreen({ navigation, route } :StackNavigator
                             <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 20 }}>{ (totalValue).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }</Text>
                         </View>
                         {
-                                paymentMethod !== "" ? (
+                                paymentMethod !== "" && customerName !== "" ? (
                                     <View>
                                         <View style = { styles.paymentContainer }>
                                             <Checkbox 
-                                                status = { paid ? "checked" : "unchecked" } 
-                                                onPress = { () => setPaid(prev => !prev) } 
+                                                status = { isPaid ? "checked" : "unchecked" } 
+                                                onPress = { () => setIsPaid(prev => !prev) } 
                                                 style = { styles.checkbox }
                                                 color="#0A6D06"
                                                 size = { 18 }
@@ -90,7 +132,7 @@ export default function FinalizeSaleScreen({ navigation, route } :StackNavigator
 
                                         <TouchableOpacity 
                                             style = {{ ...styles.button, backgroundColor: "#0A6D06", marginBottom: 4, marginTop: 25 }}
-                                            onPress={ () => setIsFinalized(true) }
+                                            onPress={ () => submitSale() }
                                         >
                                             <Text style = { styles.buttonText }>Registrar Venda</Text>
                                         </TouchableOpacity>
@@ -113,8 +155,8 @@ export default function FinalizeSaleScreen({ navigation, route } :StackNavigator
                                 <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 22, textAlign: "center" }}>
                                     Venda Registrada com Sucesso!
                                 </Text>
-                                <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 16, color: paid ? "#0A6D06" : "#770E0E", textAlign: "center" }}>
-                                    <Text style = {{ color: "#000000" }}>Status: </Text>{ paid ? "PAGO" : "NÃO PAGO" }
+                                <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 16, color: isPaid ? "#0A6D06" : "#770E0E", textAlign: "center" }}>
+                                    <Text style = {{ color: "#000000" }}>Status: </Text>{ isPaid ? "PAGO" : "NÃO PAGO" }
                                 </Text>
                             </View>
                              <TouchableOpacity 

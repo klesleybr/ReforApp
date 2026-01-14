@@ -9,14 +9,7 @@ const decimalStyle = new Intl.NumberFormat("pt-BR", { style: "currency", currenc
 export default function SaleDetailsScreen({ route, navigation } : StackNavigatorProps) {
     
     const { colors } = useTheme();
-    const { products } = route.params;
-    const total = () => {
-        var i = 0;
-        products.forEach(e => {
-            i = i + e.product.unitPrice * e.amount;
-        });
-        return i;
-    };
+    const { selectedProducts, totalValue } = route.params;    
 
     const selectImage = (category : string[] | undefined) => {
         if(category?.includes("Alimentos"))
@@ -39,7 +32,7 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
                             <View style = { styles.flatListContainer }>
                                 <FlatList                                                                                                          
                                     style = { styles.flatList }
-                                    data = { products } 
+                                    data = { selectedProducts } 
                                     renderItem={ ({ item }) => (
                                         <View style = { styles.itemContainer }>
                                             <View style = { styles.item }>
@@ -62,14 +55,14 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
                             </View> 
                             <View style = { styles.sum }>
                                 <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 20 }}>Total:</Text>
-                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 20 }}>{ decimalStyle.format(total()) }</Text>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 20 }}>{ decimalStyle.format(totalValue) }</Text>
                             </View>
 
                             <Text style = { styles.hint }>Revise os pedidos e, então, avance para a seção de pagamentos.</Text>
 
                             <TouchableOpacity 
                                 style = {{ ...styles.button, backgroundColor: "#0A6D06", marginBottom: 4, marginTop: 25 }}
-                                onPress={ () => navigation.navigate("FinalizeSales", { totalValue: total() }) }
+                                onPress={ () => navigation.navigate("FinalizeSales", { selectedProducts, totalValue }) }
                             >
                                 <Text style = { styles.buttonText }>Avançar</Text>
                             </TouchableOpacity>

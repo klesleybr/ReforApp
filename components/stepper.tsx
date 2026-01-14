@@ -3,15 +3,18 @@ import { useState } from "react";
 
 type Props = {
     value: number,
+    stopIncrementValue?: number,
     onPressRight?: (value? : number) => void;
     onPressLeft?: (value? : number) => void;
 }
 
-export default function Stepper({ value, onPressLeft, onPressRight } : Props) {
+export default function Stepper({ value, onPressLeft, onPressRight, stopIncrementValue } : Props) {
 
     const [digit, setDigit] = useState<number>(value);
 
     const increment = () => {
+        if(stopIncrementValue !== undefined && digit >= stopIncrementValue)
+            return;
         if(onPressRight !== undefined)
             onPressRight();
         setDigit((prev) => prev + 1);

@@ -11,7 +11,7 @@ import { StyleSheet } from 'react-native';
 import { Inter_400Regular, Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from 'react';
-import SalesScreen from './(tabs)/sales';
+import SalesScreen, { ProductSale } from './(tabs)/sales';
 import SaleDetailsScreen from './(tabs)/sale_details';
 import FinalizeSaleScreen from './(tabs)/finalize_sale';
 
@@ -35,8 +35,8 @@ type RootParamsList = {
   Home: undefined;
   Stock: undefined;
   Sales: undefined;
-  SaleDetails: { products : any[] };
-  FinalizeSales: { totalValue: number };
+  SaleDetails: { selectedProducts : ProductSale[], totalValue : number };
+  FinalizeSales: { selectedProducts : ProductSale[], totalValue : number };
 }
 export type StackNavigatorProps = NativeStackScreenProps<RootParamsList>;
 export type DrawerNavProps = DrawerNavigationProp<RootParamsList>;

@@ -119,17 +119,18 @@ const productsMock : any[] = [
     },
 ]
 
-type Sale = {
+export type ProductSale = {
 
     product: {
+        id: string,
         name: string,
         unitPrice: number,
         categories?: string[],
-        amount: number,
-        sold: number,
+        availableAmount: number,
         status: boolean
     },
-    amount: number
+    amount: number,
+    partialTotal: number
 
 }
 
@@ -139,9 +140,9 @@ export default function SalesScreen() {
     const navigation = useNavigation<DrawerNavProps>();
     const { colors } = useTheme();
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [products, setProducts] = useState<Sale[]>([]);
+    const [products, setProducts] = useState<ProductSale[]>([]);
 
-    const orderFunction = (list : Sale[]) => {        
+    const orderFunction = (list : ProductSale[]) => {        
        return list.sort(function(a, b) {
             return a.product.name.localeCompare(b.product.name);
        });
@@ -149,24 +150,22 @@ export default function SalesScreen() {
 
     const initialQuery = async () => {
         const querySnapshot = await getDocs(collection(db, "products"));
-        const storeProducts : Sale[] = [];
+        const storeProducts : ProductSale[] = [];
         querySnapshot.forEach((e) => {            
            storeProducts.push({
                 product: {
+                    id: e.id,
                     name: e.get("name"),
                     unitPrice: e.get("unitPrice"),
-                    amount: e.get("amount"),
-                    sold: e.get("sold"),
+                    availableAmount: e.get("amount") - e.get("sold") as number,                    
                     categories: e.get("categories"),
                     status: e.get("status")
                 },
-                amount: 0
+                amount: 0,
+                partialTotal: 0
            });
         });
-        setProducts(orderFunction(storeProducts));
-        console.log(querySnapshot);
-        console.log(storeProducts);
-        console.log(products);
+        setProducts(orderFunction(storeProducts));        
     }
 
     const selectImage = (category : string[] | undefined) => {
@@ -181,15 +180,24 @@ export default function SalesScreen() {
 
     const toDetails = () => {
         const finalList = products.filter(e => e.amount > 0);
+        const totalValue = () => {
+            var value = 0;
+            products.forEach(e => { value = value + e.partialTotal });
+            return value;
+        }
         if(finalList.length > 0)
-            navigation.navigate("SaleDetails", { products: finalList });
+            navigation.navigate("SaleDetails", { selectedProducts: finalList, totalValue: totalValue() });
     };
 
     useEffect(() => {
         setIsLoading(true);
-        initialQuery();        
-        setIsLoading(false);
+        initialQuery();                
     }, []);
+
+    useEffect(() => {
+        if(products.length > 0)
+            setIsLoading(false);
+    }, [products])
 
     return(
         <SafeAreaProvider>
@@ -228,13 +236,20 @@ export default function SalesScreen() {
                                                 {
                                                     item.product.status === false ? (
                                                         <Text style = { styles.productOff }>Produto desativado</Text>                                                
-                                                    ) : item.product.amount <= item.product.sold ? (
+                                                    ) : item.product.availableAmount <= 0 ? (
                                                         <Text style = { styles.productOff }>Produto indisponível</Text>
                                                     ) : (
                                                         <Stepper 
                                                             value = { item.amount } 
-                                                            onPressLeft = { () => { item.amount = item.amount - 1; console.log(item.amount) }}
-                                                            onPressRight= { () => {item.amount = item.amount + 1; console.log(item.amount) }}
+                                                            stopIncrementValue = { item.product.availableAmount }
+                                                            onPressLeft = { () => {                                                                 
+                                                                item.amount = item.amount - 1;  
+                                                                item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                            }}
+                                                            onPressRight= { () => {                                                                 
+                                                                item.amount = item.amount + 1;
+                                                                item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                            }}
                                                         />
                                                     )
                                                 }
