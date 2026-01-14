@@ -11,7 +11,9 @@ import { StyleSheet } from 'react-native';
 import { Inter_400Regular, Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from 'react';
-import SalesScreen from './(tabs)/sales';
+import SalesScreen, { ProductSale } from './(tabs)/sales';
+import SaleDetailsScreen from './(tabs)/sale_details';
+import FinalizeSaleScreen from './(tabs)/finalize_sale';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +35,8 @@ type RootParamsList = {
   Home: undefined;
   Stock: undefined;
   Sales: undefined;
+  SaleDetails: { selectedProducts : ProductSale[], totalValue : number };
+  FinalizeSales: { selectedProducts : ProductSale[], totalValue : number };
 }
 export type StackNavigatorProps = NativeStackScreenProps<RootParamsList>;
 export type DrawerNavProps = DrawerNavigationProp<RootParamsList>;
@@ -56,11 +60,13 @@ export default function RootStack() {
 
   const  Screens =  () => {
     return(
-      <Stack.Navigator initialRouteName= "Sales" screenOptions={ { headerShown: false } }>
+      <Stack.Navigator initialRouteName= "Auth" screenOptions={ { headerShown: false } }>
         <Stack.Screen name = "Auth" component = { AuthScreen } options= {{  }}></Stack.Screen>
         <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
         <Stack.Screen name = "Stock" component = { StockScreen }></Stack.Screen>
         <Stack.Screen name = "Sales" component = { SalesScreen }></Stack.Screen>
+        <Stack.Screen name = "SaleDetails" component = { SaleDetailsScreen }></Stack.Screen>
+        <Stack.Screen name = "FinalizeSales" component = { FinalizeSaleScreen }></Stack.Screen>
       </Stack.Navigator>   
     );
   }  
@@ -79,7 +85,6 @@ export default function RootStack() {
         } 
         initialRouteName = "Screens" 
         drawerContent = { (props) => <CustomDrawerContent {...props} /> }      
-
       >
         <Drawer.Screen options={{ popToTopOnBlur: true }} name = "Screens" component = { Screens }></Drawer.Screen>        
       </Drawer.Navigator>
