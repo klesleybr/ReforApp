@@ -11,114 +11,6 @@ import { ActivityIndicator } from "react-native";
 import { db } from "@/config/firebaseConfig";
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 
-const productsMock : any[] = [
-    {
-        product: {
-            name: "Pastel de frango",
-            description: "",
-            categories: ["Alimentos", "Pastéis"],
-            status: true,
-            cost: 2,
-            price: 3.75,
-            amount: 100,
-            sold: 10,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-    {
-        product: {
-            name: "Bolo de morango",
-            description: "Venda por fatia",
-            categories: ["Alimentos", "Bolo"],
-            status: true,
-            cost: 3,
-            price: 4.25,
-            amount: 30,
-            sold: 10,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-    {
-        product: {
-            name: "Guaraná Antártica(Latinha)",
-            description: undefined,
-            categories: ["Bebidas", "Refrigerantes"],
-            status: true,
-            cost: 3,
-            price: 5,
-            amount: 50,
-            sold: 50,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-    {
-        product: {
-            name: "Água Mineral s/ Gás",
-            description: undefined,
-            categories: ["Bebidas", "Água"],
-            status: false,
-            cost: 2,
-            price: 3.75,
-            amount: 100,
-            sold: 10,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-    {
-        product: {
-            name: "Sorvete de Uva",
-            description: undefined,
-            categories: ["Gelados", "Sorvetes"],
-            status: true,
-            cost: 1,
-            price: 2,
-            amount: 20,
-            sold: 8,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-    {
-        product: {
-            name: "Açaí (copo)",
-            description: undefined,
-            categories: ["Gelados", "Sorvetes"],
-            status: true,
-            cost: 2,
-            price: 3.25,
-            amount: 11,
-            sold: 2,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-    {
-        product: {
-            name: "Cachorro Quente",
-            description: undefined,
-            categories: ["Alimentos", "Lanches"],
-            status: true,
-            cost: 3,
-            price: 5.50,
-            amount: 30,
-            sold: 8,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-        },
-        amount: 0,
-    },
-]
-
 export type ProductSale = {
 
     product: {
@@ -133,7 +25,6 @@ export type ProductSale = {
     partialTotal: number
 
 }
-
 
 export default function SalesScreen() {
 
