@@ -4,7 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Logo from "@/assets/images/horizontal-logo.svg";
 
 type IconType = {
-    iconType: "menu" | "arrow-back"
+    iconType?: "menu" | "arrow-back"
 }
 
 export default function Header({ iconType } : IconType) {
@@ -14,19 +14,21 @@ export default function Header({ iconType } : IconType) {
 
     return(
     <View style = { [{ backgroundColor: colors.primary }, styles.container] }>
-            <Ionicons 
-                name = { iconType } 
-                color = "#FFFFFF"
-                size = { 24 } 
-                onPress = { () => {
-                    if(iconType === "menu") {
-                        return navigation.dispatch(DrawerActions.openDrawer());
-                    } else {
-                        return navigation.goBack();
-                    }
-                } } 
-                style = { styles.button} 
-            />                       
+            {
+                iconType ? (<Ionicons 
+                    name = { iconType  } 
+                    color = "#FFFFFF"
+                    size = { 24 } 
+                    onPress = { () => {
+                        if(iconType === "menu") {
+                            return navigation.dispatch(DrawerActions.openDrawer());
+                        } else {
+                            return navigation.goBack();
+                        }
+                    } } 
+                    style = { styles.button} 
+                />) : null   
+            }                    
             <Logo/>
         </View>
     );

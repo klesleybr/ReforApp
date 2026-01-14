@@ -66,7 +66,7 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
     return(
         <SafeAreaProvider>
             <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
-                <Header iconType="arrow-back"/>
+                <Header iconType = { isFinalized ? undefined : "arrow-back" }/>
                 {                    
                     !isFinalized ? (
                     <ScrollView 
@@ -85,7 +85,7 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                                     <Text style = { styles.label }>Telefone</Text>
                                     <TextInput style = { styles.textInput }/>
                                 </View>
-                                <View>
+                                <View style = {{ width: "58%" }}>
                                     <Text style = { styles.label }>E-mail</Text>
                                     <TextInput style = { styles.textInput }/>
                                 </View>
@@ -95,8 +95,8 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                                     <Text style = { styles.label }>Cidade</Text>
                                     <TextInput style = { styles.textInput }/>
                                 </View>
-                                <View>
-                                    <Text style = { styles.label }>Forma de pagamento <Text style = { styles.required }>*</Text></Text>
+                                <View style = {{ width: "45%" }}>
+                                    <Text style = { styles.label } numberOfLines={1}>Forma de pagamento <Text style = { styles.required }>*</Text></Text>
                                     <Dropdown 
                                         data = { paymentMethodList } 
                                         value = { paymentMethod }

@@ -3,6 +3,37 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from "react
 import { DrawerNavProps, StackNavigatorProps } from "../_layout";
 import { useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
+import { ProductSale } from "./sales";
+
+const mockedProducts : ProductSale[] = [
+    {
+        product: {
+            id: "a09dkfw0293kd",
+            name: "Bolo de maracujá (fatias)",
+            unitPrice: 4.90,
+            categories: [ "Alimentos", "Bolos" ],
+            availableAmount: 19,
+            status: true
+        },
+        amount: 3,
+        partialTotal: 3 * 4.9
+    },
+    {
+        product: {
+            id: "90dkfjdlls0",
+            name: "Doritos sabor Pimenta e Limão",
+            unitPrice: 6.30,
+            categories: [ "Alimentos", "Lanches" ],
+            availableAmount: 10,
+            status: true
+        },
+        amount: 2,
+        partialTotal: 2 * 6.30
+    }
+
+]
+
+const mockedTotalValue = mockedProducts[0].partialTotal + mockedProducts[1].partialTotal;
 
 const decimalStyle = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -26,7 +57,7 @@ export default function SaleDetailsScreen({ route, navigation } : StackNavigator
             <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
                 <Header iconType="arrow-back"/>                
                 {
-                    route.params !== undefined ? ( 
+                    false !== undefined ? ( 
                         <View style = { styles.summaryContainer }>
                             <Text style = { styles.title }>Detalhes da Venda</Text>
                             <View style = { styles.flatListContainer }>
@@ -118,7 +149,8 @@ const styles = StyleSheet.create({
         paddingRight: 15,
     },
     item: {
-        flexDirection: "row"
+        flexDirection: "row",
+        width: "70%"
     },
     imageItem: {
         width: 70,
@@ -126,7 +158,8 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     itemInfo: {
-        marginLeft: 7
+        marginLeft: 7,
+        width: "85%"
     },
     itemTitle: {
         fontFamily: "Inter_700Bold",
