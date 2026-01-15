@@ -81,8 +81,7 @@ const mockedSales : SaleData[] = [
 ]
 
 export default function ShowSalesScreen() {
-    
-    const [expand, setExpand] = useState<boolean>(false);
+        
     const [expandId, setExpandId] = useState<string | undefined>(undefined);
     const [salesData, setSalesData] = useState<SaleData[]>([]);
     const decimalStyle = Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -93,11 +92,26 @@ export default function ShowSalesScreen() {
             return;
 
         setSalesData(querySnapshot.docs.map(e => {
+                const listProducts : any[] = e.get("products");
+                var total : number = 0;
+
+                listProducts.forEach((e) => {
+                    total = total + (e.amount * e.unitPrice);
+                });
+
                 return {
                     id: e.id,
-                    products: e.get("products"),
+                    products: listProducts.map((e) => {
+                        return {
+                            id: e.id as string,
+                            name: e.name as string,
+                            amount: e.amount as number,
+                            unitPrice: e.unitPrice as number,
+                            partialTotal: (e.amount * e.unitPrice) as number
+                        };
+                    }),
                     customerName: e.get("customerName"),
-                    totalValue: e.get("totalValue"),
+                    totalValue: total,
                     createdAt: e.get("createdAt"),
                     updatedAt: e.get("updatedAt"),
                     isPaid: e.get("isPaid"),

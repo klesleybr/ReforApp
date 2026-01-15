@@ -62,7 +62,7 @@ export default function RootStack() {
 
   const  Screens =  () => {
     return(
-      <Stack.Navigator initialRouteName= "ShowSales" screenOptions={ { headerShown: false } }>
+      <Stack.Navigator initialRouteName= "Home" screenOptions={ { headerShown: false } }>
         <Stack.Screen name = "Auth" component = { AuthScreen } options= {{  }}></Stack.Screen>
         <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
         <Stack.Screen name = "Stock" component = { StockScreen }></Stack.Screen>
