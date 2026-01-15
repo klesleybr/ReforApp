@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import SalesScreen, { ProductSale } from './(tabs)/sales';
 import SaleDetailsScreen from './(tabs)/sale_details';
 import FinalizeSaleScreen from './(tabs)/finalize_sale';
+import ShowSalesScreen from './(tabs)/show_sales';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,6 +38,7 @@ type RootParamsList = {
   Sales: undefined;
   SaleDetails: { selectedProducts : ProductSale[], totalValue : number };
   FinalizeSales: { selectedProducts : ProductSale[], totalValue : number };
+  ShowSales: undefined;
 }
 export type StackNavigatorProps = NativeStackScreenProps<RootParamsList>;
 export type DrawerNavProps = DrawerNavigationProp<RootParamsList>;
@@ -60,13 +62,14 @@ export default function RootStack() {
 
   const  Screens =  () => {
     return(
-      <Stack.Navigator initialRouteName= "Auth" screenOptions={ { headerShown: false } }>
+      <Stack.Navigator initialRouteName= "ShowSales" screenOptions={ { headerShown: false } }>
         <Stack.Screen name = "Auth" component = { AuthScreen } options= {{  }}></Stack.Screen>
         <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
         <Stack.Screen name = "Stock" component = { StockScreen }></Stack.Screen>
         <Stack.Screen name = "Sales" component = { SalesScreen }></Stack.Screen>
         <Stack.Screen name = "SaleDetails" component = { SaleDetailsScreen }></Stack.Screen>
         <Stack.Screen name = "FinalizeSales" component = { FinalizeSaleScreen }></Stack.Screen>
+        <Stack.Screen name = "ShowSales" component = { ShowSalesScreen }></Stack.Screen>
       </Stack.Navigator>   
     );
   }  

@@ -6,10 +6,14 @@ import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Foundation from '@expo/vector-icons/Foundation';
+import { useState } from "react";
+import Entypo from '@expo/vector-icons/Entypo';
 
-const username : string = "Augusto Lima Ribeiro"
+const username : string = "Usuário Padrão"
 
 export default function CustomDrawerContent ({ navigation } : DrawerContentComponentProps) {    
+    
+    const [expandSale, setExpandSale] = useState<boolean>(false);
 
     return(
       <View style = {{ flex: 1, justifyContent: "center"}}>
@@ -35,13 +39,34 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
                         labelStyle = { styles.label }
                         style = { styles.item }                                         
                     /> 
-                    <DrawerItem 
-                        label = "Vendas" 
-                        onPress={() => navigation.navigate("Screens", { screen: "Sales" }) } 
-                        icon = { () => <FontAwesome name = "usd" color = "#000000" size = { 24 } style = { [styles.icon, { paddingHorizontal: 10}] }/>}   
-                        labelStyle = { styles.label }
-                        style = { styles.item }                                         
-                    /> 
+                    <View style = { styles.item }>
+                        <DrawerItem 
+                            label = "Vendas" 
+                            onPress={() => setExpandSale(prev => !prev) } 
+                            icon = { () => <FontAwesome name = "usd" color = "#000000" size = { 24 } style = { [styles.icon, { paddingHorizontal: 10}] }/>}   
+                            labelStyle = { styles.label }                                                           
+                        />                        
+                        {
+                            expandSale ? (
+                                <View style = { styles.saleOptionsContainer }>
+                                    <DrawerItem                                         
+                                        label = "Realizar Venda"
+                                        onPress={ () => navigation.navigate("Screens", { screen: "Sales" }) }
+                                        labelStyle = {{ ...styles.label, opacity: 0.8, fontSize: 15 }}
+                                        icon = { () => <Entypo name="triangle-right" size={22} color = "#FFFFFF" style = {{ opacity: 0.8, marginLeft: "10%" }}/> }
+                                        style = { styles.saleOptions }
+                                    />
+                                    <DrawerItem 
+                                        label = "Consultar Vendas"
+                                        onPress={ () => navigation.navigate("Screens", { screen: "ShowSales" }) }
+                                        labelStyle = {{ ...styles.label, opacity: 0.8, fontSize: 15 }}
+                                        icon = { () => <Entypo name="triangle-right" size={22} color = "#FFFFFF" style = {{ opacity: 0.8, marginLeft: "10%" }}/> }
+                                    />
+                                </View>
+                            ) : null
+                        }
+                    </View>
+                     
                     <DrawerItem 
                         label = "Estoque" 
                         onPress={() => navigation.navigate("Screens", { screen: "Stock" }) } 
@@ -120,6 +145,16 @@ const styles = StyleSheet.create({
         borderColor: "#FFFFFF",
         borderRadius: 5,
         gap: 5         
-    }
+    },
+    
+    saleOptionsContainer: {
+        
+        
+    },
+
+    saleOptions: {        
+        justifyContent: "center",
+        
+    },
 
 });
