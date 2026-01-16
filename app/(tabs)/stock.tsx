@@ -24,7 +24,7 @@ type Product = {
     id?: string,
     name: string,
     description?: string,
-    categories: string[],
+    categories?: string[],
     amount: number,
     unitPrice: number,
     unitCost: number,
@@ -43,7 +43,7 @@ type Category = {
 };
 
 type StockModalProps = {
-    onSubmit: () => void;
+    onSubmit?: () => void;
     onClose: () => void;
     categories?: Category[],
     productData?: Product,
@@ -182,6 +182,24 @@ const stockA : Product[]  = [
         updatedAt: Timestamp.now()
     },
 
+];
+
+const mockedCategories : Category[] = [
+    {
+        name: "Alimentos",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
+        name: "Bebidas",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
+        name: "Lanches",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
 ]
 
 
@@ -212,6 +230,8 @@ export default function StockScreen() {
                 createdAt: e.get("createdAt"),
                 updatedAt: e.get("updatedAt")
             };
+        }).sort(function(a, b) {
+            return a.name.localeCompare(b.name);
         }));   
     };
 
@@ -241,7 +261,7 @@ export default function StockScreen() {
     }
         
     useEffect(() => {
-        //query()
+        query()
     }, []);
 
     useEffect(() => {        
@@ -253,13 +273,13 @@ export default function StockScreen() {
         return percent < 30;
     };
 
-    const selectImage = (categories : string[]) => {
-        categories = categories.map(e => e.toLocaleLowerCase());
-        if(categories.includes("alimentos"))
+    const selectImage = (categories : string[] | undefined) => {
+        categories = categories?.map(e => e.toLocaleLowerCase());
+        if(categories?.includes("alimentos"))
             return require("@/assets/images/food-default.jpg");    
-        if(categories.includes("bebidas"))
+        if(categories?.includes("bebidas"))
             return require("@/assets/images/drink-default.jpg");
-        if(categories.includes("gelados"))
+        if(categories?.includes("gelados"))
             return require("@/assets/images/ice-cream-default.jpg");
         return require("@/assets/images/eat-default.jpg");   
     };
@@ -271,11 +291,12 @@ export default function StockScreen() {
                 <StockModal 
                     isVisible = { visibleModal } 
                     onSubmit = { () => setVisibleModal(false) } 
-                    onClose={ () => setVisibleModal(false) } 
+                    onClose = { () => setVisibleModal(false) } 
+                    categories={ mockedCategories }
                 />                                       
                 {
-                    stockA.length === 0 ? (
-                        <View style = {{ alignItems: "center", justifyContent: "center" }}>
+                    products.length === 0 ? (
+                        <View style = {{ alignItems: "center", justifyContent: "center", flex: 1 }}>
                             <Text style = { styles.emptyTitle }>Nenhum produto foi registrado</Text>
                             <Text style = { styles.emptySubtitle }>Aperte no botão abaixo para adicionar um produto.</Text>
                             <TouchableOpacity style = { styles.button } onPress = { () => setVisibleModal(true) }>
@@ -287,7 +308,7 @@ export default function StockScreen() {
                             <Text style = { styles.productsTitle }>Todos os Produtos</Text>
                             <FlatList
                                 showsVerticalScrollIndicator = { false }
-                                data = { stockA }                                    
+                                data = { products }                                    
                                 renderItem = { ({ item }) => {
                                     return(
                                         <View style ={ styles.itemContainer }> 
@@ -314,7 +335,7 @@ export default function StockScreen() {
                                                     <Feather name="edit-2" size={24} color="black" onPress={() => null} />
                                                 </TouchableOpacity>
                                                 <TouchableOpacity style = {{ backgroundColor: "#6D0808", padding: 4, borderRadius: 4 }}>
-                                                    <FontAwesome6 name="trash" size={18} color="white" />
+                                                    <FontAwesome6 name="trash" size={18} color="white" onPress = { () => deleteProduct(item.id!) } />
                                                 </TouchableOpacity>
 
                                             </View>
@@ -336,8 +357,9 @@ export default function StockScreen() {
 
 }
 
-function StockModal({ onClose, onSubmit, categories, productData, isVisible = false } : StockModalProps) {
+function StockModal({ onClose, categories, productData, isVisible = false } : StockModalProps) {
 
+    const [categoriesList, setCategoriesList] = useState<Category[] | undefined>(categories);
     const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
     const [categoryName, setCategoryName] = useState<string | undefined>(undefined);
     const [categoryDescription, setCategoryDescription] = useState<string | undefined>(undefined);
@@ -345,8 +367,7 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
     const [priceString, setPriceString] = useState<string>("0");
     const [costString, setCostString] = useState<string>("0");
     
-
-    const [product, setProduct] = useState<Product>({
+    const productReference : Product = {
         name: "",
         amount: 0,
         status: true,
@@ -357,7 +378,8 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
         description: "",
         createdAt: undefined,
         updatedAt: undefined
-    });
+    }
+    const [product, setProduct] = useState<Product>(productReference);
 
     const formatDecimal = (value : string, prev : string, attribute : "cost" | "price") => {
         
@@ -388,8 +410,23 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
 
     const addProduct = async () => {
         try {                        
-            const add = await addDoc(collection(db, "products"), { ...product, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
-            onSubmit;                        
+            const add = await addDoc(collection(db, "products"), { 
+                name: product.name,
+                amount: product.amount,
+                status: product.status,
+                ...(selectedCategories.length > 0 ? { categories: selectedCategories } : {}),
+                unitPrice: product.unitPrice,
+                unitCost: product.unitCost,
+                sold: 0,
+                ...(product.description !== "" ? { description: product.description } : {}),
+                createdAt: Timestamp.now(), 
+                updatedAt: Timestamp.now() 
+            });
+            setSelectedCategories([]);
+            setCostString("");
+            setPriceString("");
+            setProduct(productReference),            
+            onClose();                      
         } catch(e) {
             console.log("Erro ao adicionar o produto: " + e);
         }        
@@ -397,15 +434,15 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
 
     const addCategory = async () => {
         try {            
-            const add = await addDoc(collection(db, "categories"), { 
+            await addDoc(collection(db, "categories"), { 
                 name: categoryName, 
-                description: categoryDescription, 
+                ...(categoryDescription !== "" ? { description: categoryDescription } : {}),
                 createdAt: Timestamp.now(), 
                 updatedAt: Timestamp.now() 
-            });
-            console.log("Categoria criada com sucesso: ", add.id);
+            });            
             setCategoryName("");
-            setCategoryDescription("");
+            if(categoryDescription !== "")
+                setCategoryDescription("");
         } catch(e) {
             console.log("Erro ao adicionar categoria:", e);
         }
@@ -422,22 +459,16 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
                     <View style = { stylesModal.textInputContainer }>
                         <View style = {{ gap: 8, width: "70%" }}>
                             <Text style = { stylesModal.titleTextInput }>Nome</Text>
-                            <TextInput style = {{ ...stylesModal.textInput }} value = { product?.name } onChangeText = { (value) => setProduct({ ...product, name: value }) } />
+                            <TextInput style = { stylesModal.textInput } value = { product.name } onChangeText = { (value) => setProduct({ ...product, name: value }) } />
                         </View>                    
                         <View style = {{ gap: 8, width: "30%" }}>
                             <Text style = { stylesModal.titleTextInput }>Quantidade</Text>
                             <TextInput 
                                 style = { stylesModal.textInput } 
-                                value = { product?.amount?.toString() } 
-                                onChangeText= { 
-                                    (value) => {
-                                        if(!isNaN(Number(value))) {
-                                            return setProduct(() => {
-                                                if(!isNaN(Number(value))) 
-                                                    return { ...product, amount: Number(value) }
-                                                return { ...product, amount: 0 }
-                                            }); 
-                                        }
+                                value = { product.amount.toString() } 
+                                onChangeText = { (value) => {
+                                        if(!isNaN(Number(value)))
+                                            setProduct({ ...product, amount: Number(value) }); 
                                         return;
                                     }
                                 } 
@@ -447,11 +478,11 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
 
                     <View style = {{ ... stylesModal.textInputContainer, marginVertical: 10 }}>
                         <View style = {{ gap: 8, width: "50%" }}>
-                            <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Custo Unitário</Text>
+                            <Text style = { stylesModal.titleTextInput }>Custo Unitário</Text>
                             <TextInput 
-                                style = {{ ...stylesModal.textInput }} 
+                                style = { stylesModal.textInput } 
                                 value = { costString }
-                                onChangeText= { (value) => setCostString((prev) => formatDecimal(value, prev, "cost")) }
+                                onChangeText= { (value) => { console.log(value), setCostString((prev) => formatDecimal(value, prev, "cost"))} }
                                 inputMode = "decimal" 
                             />
                         </View>                     
@@ -467,15 +498,14 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
                     </View>
 
                     {
-                        categories ? (
+                        categoriesList !== undefined ? (
                             <View style = {{ width: "90%", marginVertical: 10,   justifyContent: "center" }}>                            
                                 <MultiSelect
-                                    data={ categories }
-                                    labelField= "name"
-                                    valueField= "name"
-                                    onChange={(value)=> setSelectedCategories(value)}
-                                    placeholder="Selecione uma ou mais categorias"
-                                    search = {true}                                
+                                    data = { categoriesList }
+                                    labelField = "name"
+                                    valueField = "name"
+                                    onChange={ (value) => setSelectedCategories(value) }
+                                    placeholder = "Selecione uma ou mais categorias"                                                                
                                     value = { selectedCategories }                                                             
                                 />
                                 
@@ -532,7 +562,7 @@ function StockModal({ onClose, onSubmit, categories, productData, isVisible = fa
                         </View> 
                     </View>
                     
-                    <TouchableOpacity style = { stylesModal.button } onPress={ () =>  null }>
+                    <TouchableOpacity style = { stylesModal.button } onPress={ () => addProduct() }>
                         <Text style = { stylesModal.buttonText }>Adicionar</Text>                    
                     </TouchableOpacity>
                 </View>            
