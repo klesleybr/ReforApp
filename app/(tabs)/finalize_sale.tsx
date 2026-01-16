@@ -40,11 +40,9 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                         id: e.product.id,
                         name: e.product.name,
                         unitPrice: e.product.unitPrice,
-                        amount: e.amount,
-                        partialTotal: e.partialTotal
+                        amount: e.amount,                        
                     }
-                }),
-                totalValue,
+                }),                
                 customerName,
                 paymentMethod,
                 isPaid,
