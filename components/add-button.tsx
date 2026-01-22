@@ -1,14 +1,15 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 type Props = {
-    onPress: () => void
+    onPress: () => void,
+    title: string,
 }
 
-export default function AddButton({ onPress } : Props) {
+export default function AddButton({ onPress, title } : Props) {
 
     return(
         <TouchableOpacity onPress={ onPress } style = { styles.button }>
-            <Text style = { styles.buttonText }>Adicionar Produto</Text>
+            <Text style = { styles.buttonText }>{ title }</Text>
         </TouchableOpacity>
     );
 

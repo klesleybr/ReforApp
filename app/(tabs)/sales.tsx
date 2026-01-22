@@ -59,12 +59,13 @@ export default function SalesScreen() {
         setProducts(orderFunction(storeProducts));        
     }
 
-    const selectImage = (category : string[] | undefined) => {
-        if(category?.includes("Alimentos"))
+    const selectImage = (categories : string[] | undefined) => {
+        categories = categories?.map(e => e.toLocaleLowerCase());
+        if(categories?.includes("alimentos"))
             return require("@/assets/images/food-default.jpg");
-        if(category?.includes("Bebidas"))
+        if(categories?.includes("bebidas"))
             return require("@/assets/images/drink-default.jpg");
-        if(category?.includes("Gelados"))
+        if(categories?.includes("gelados"))
             return require("@/assets/images/ice-cream-default.jpg")
         return require("@/assets/images/eat-default.jpg");
     }
