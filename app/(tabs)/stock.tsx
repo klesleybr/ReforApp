@@ -1,5 +1,5 @@
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, SectionList, Image, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, Image, TextInput, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
 
 import { useTheme, useNavigation } from "@react-navigation/native";
@@ -9,7 +9,7 @@ import Header from "@/components/header";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
 import GeneralModal from "@/components/general-modal";
 
-import { getFirestore, doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -206,11 +206,11 @@ const mockedCategories : Category[] = [
 export default function StockScreen() {
 
     const [visibleModal, setVisibleModal] = useState(false);
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<Product[] | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
     const { colors } = useTheme();
 
-    const query = async () => {
+    const queryManual = async () => {
         const productsQuery = await getDocs(collection(db, "products"));
         if(productsQuery.empty)
             return;
@@ -261,7 +261,31 @@ export default function StockScreen() {
     }
         
     useEffect(() => {
-        query()
+
+        const unsub = onSnapshot(query(collection(db, "products")), (querySnapshot) => {
+            if(querySnapshot.empty)
+                return;
+
+            const productsData = querySnapshot.docs;
+            setProducts(productsData.map(e => {
+                return {
+                    id: e.id,
+                    name: e.get("name"),
+                    description: e.get("description"),
+                    categories: e.get("categories"),
+                    unitPrice: e.get("price"),
+                    unitCost: e.get("cost"),
+                    amount: e.get("amount"),
+                    sold: e.get("sold"),
+                    status: e.get("status"),
+                    createdAt: e.get("createdAt"),
+                    updatedAt: e.get("updatedAt")
+                }
+            }));
+        });
+
+        return () => unsub();
+
     }, []);
 
     useEffect(() => {        
@@ -295,7 +319,12 @@ export default function StockScreen() {
                     categories={ mockedCategories }
                 />                                       
                 {
-                    products.length === 0 ? (
+                    products === undefined ? (
+                        <View style = { styles.loadingContainer }>
+                            <ActivityIndicator size = { 40 } color = "#6D0808"/>
+                            <Text style = { styles.loadingText }>Carregando produtos...</Text>
+                        </View>
+                    ) : products.length === 0 ? (
                         <View style = {{ alignItems: "center", justifyContent: "center", flex: 1 }}>
                             <Text style = { styles.emptyTitle }>Nenhum produto foi registrado</Text>
                             <Text style = { styles.emptySubtitle }>Aperte no botão abaixo para adicionar um produto.</Text>
@@ -577,6 +606,17 @@ const styles = StyleSheet.create({
     container: { 
         flex: 1,   
         alignItems: "center"                
+    },
+    loadingContainer: {
+        flex: 1,        
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 20
+    },
+    loadingText: {
+        fontFamily: "Inter_400Regular",
+        fontSize: 15,
+        opacity: 0.5
     },
     emptyTitle: {
         fontFamily: "Inter_700Bold",
