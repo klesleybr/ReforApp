@@ -1,3 +1,4 @@
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, StyleSheet, Text, TouchableOpacity, Image } from "react-native";
 import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import Octicons from '@expo/vector-icons/Octicons';
@@ -16,12 +17,12 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
     const [expandSale, setExpandSale] = useState<boolean>(false);
 
     return(
-      <View style = {{ flex: 1, justifyContent: "center"}}>
-        <MaterialCommunityIcons name = "close-thick" size = { 24 } color = "#FFFFFF" style = { styles.close } onPress = { () => navigation.closeDrawer() } />
-        <View>
-            <DrawerContentScrollView contentContainerStyle = {{ gap: 20, marginBottom: "10%"}}>
+        <SafeAreaProvider>
+            <SafeAreaView style = {{ flex: 1 }}>
+                <MaterialCommunityIcons name = "close-thick" size = { 24 } color = "#FFFFFF" style = { styles.close } onPress = { () => navigation.closeDrawer() } />
+                <DrawerContentScrollView contentContainerStyle = {{ gap: 20, marginBottom: "10%"}} scrollEnabled = { true }>
                 <View style = {{ alignItems: "center", gap: 17 }}>
-                    <Image source = { require("@/assets/images/user-default.png") } style = { { width: 143, height: 143, resizeMode: "cover", borderRadius: "50%" }}></Image>
+                    <Image source = { require("@/assets/images/user-default.png") } style = { { width: 143, height: 143, resizeMode: "cover", borderRadius: 100 }}></Image>
                     <Text style = {{ color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_400Regular", opacity: 0.5 }}>{ username }</Text>
                 </View>
                 <View>
@@ -96,15 +97,15 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
                         style = { styles.item }                                         
                     />  
                 </View>
-            </DrawerContentScrollView>        
-        </View>
-        <View style = {{ width: "100%", alignItems: "center"}}>
-            <TouchableOpacity style = { styles.logout } onPress={ () => navigation.navigate("Screens", { screen: "Auth" })}>
-                <Text style = { styles.label }>Sair</Text>
-                <MaterialCommunityIcons name = "logout" color = "#FFFFFF" size = { 19 } />
-            </TouchableOpacity>
-        </View>        
-      </View>
+                <View style = {{ width: "100%", alignItems: "center", marginTop: "10%" }}>
+                    <TouchableOpacity style = { styles.logout } onPress={ () => navigation.navigate("Screens", { screen: "Auth" })}>
+                        <Text style = { styles.label }>Sair</Text>
+                        <MaterialCommunityIcons name = "logout" color = "#FFFFFF" size = { 19 } />
+                    </TouchableOpacity>
+                </View>    
+            </DrawerContentScrollView>    
+            </SafeAreaView>
+        </SafeAreaProvider>  
     );
 
 }
@@ -113,8 +114,9 @@ const styles = StyleSheet.create({
 
     close: {
         position: "absolute",
-        top: 14,
+        top: 40,
         marginLeft: "4%",
+        zIndex: 1
     },
 
     label: {        
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
 
     icon: {
         backgroundColor: "#FFFFFF",
-        borderRadius: "50%",
+        borderRadius: 50,
         padding: 4
     },
 

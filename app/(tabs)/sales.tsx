@@ -30,8 +30,7 @@ export default function SalesScreen() {
 
     const navigation = useNavigation<DrawerNavProps>();
     const { colors } = useTheme();
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [products, setProducts] = useState<ProductSale[]>([]);
+    const [products, setProducts] = useState<ProductSale[] | undefined>(undefined);
 
     const orderFunction = (list : ProductSale[]) => {        
        return list.sort(function(a, b) {
@@ -71,32 +70,26 @@ export default function SalesScreen() {
     }
 
     const toDetails = () => {
-        const finalList = products.filter(e => e.amount > 0);
+        const finalList = products?.filter(e => e.amount > 0);
         const totalValue = () => {
             var value = 0;
-            products.forEach(e => { value = value + e.partialTotal });
+            products?.forEach(e => { value = value + e.partialTotal });
             return value;
         }
-        if(finalList.length > 0)
-            navigation.navigate("SaleDetails", { selectedProducts: finalList, totalValue: totalValue() });
+        if(finalList!.length > 0)
+            navigation.navigate("SaleDetails", { selectedProducts: finalList!, totalValue: totalValue() });
     };
 
     useEffect(() => {
-        setIsLoading(true);
         initialQuery();                
     }, []);
-
-    useEffect(() => {
-        if(products.length > 0)
-            setIsLoading(false);
-    }, [products])
 
     return(
         <SafeAreaProvider>
             <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
                 <Header iconType="arrow-back"/>
                 {
-                    isLoading ? (
+                    products === undefined ? (
                         <View style = { styles.loadingContainer }>
                             <ActivityIndicator size = { 40 } color = "#6D0808"/>
                             <Text style = { styles.loadingText }>Carregando dados...</Text>
@@ -166,7 +159,7 @@ export default function SalesScreen() {
                                 </Text>                                
                             </View>
                             <TouchableOpacity 
-                                style = {{ backgroundColor: "#6D0808", paddingVertical: 8, borderRadius: 5, width: "90%" }} 
+                                style = {{ backgroundColor: "#6D0808", paddingVertical: 8, paddingHorizontal: 10, borderRadius: 5, width: "90%" }} 
                                 onPress={ () => navigation.navigate("Stock")}
                             >
                                 <Text style = {{ color: "#FFFFFF", fontFamily: "Inter_700Bold", textAlign: "center", fontSize: 16 }}>
