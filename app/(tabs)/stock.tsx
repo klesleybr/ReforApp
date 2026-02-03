@@ -19,6 +19,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { MultiSelect } from "react-native-element-dropdown";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 type Product = {
     id?: string,
@@ -47,7 +48,8 @@ type StockModalProps = {
     onClose: () => void;
     categories?: Category[],
     productData?: Product,
-    isVisible?: boolean
+    isVisible?: boolean,
+    product?: Product,
 };
 
 const stockA : Product[]  = [
@@ -206,6 +208,7 @@ const mockedCategories : Category[] = [
 export default function StockScreen() {
 
     const [visibleModal, setVisibleModal] = useState(false);
+    const [upgradeAmount, setUpgradeAmount] = useState<Product | undefined>(undefined);
     const [products, setProducts] = useState<Product[] | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
     const { colors } = useTheme();
@@ -281,16 +284,14 @@ export default function StockScreen() {
                     createdAt: e.get("createdAt"),
                     updatedAt: e.get("updatedAt")
                 }
+            }).sort(function(a, b) {
+                return a.name.localeCompare(b.name);
             }));
         });
 
         return () => unsub();
 
-    }, []);
-
-    useEffect(() => {        
-        //query();        
-    }, [products, setProducts]);    
+    }, []);    
 
     const reposition = (amount : number, sold : number) : boolean => {
         const percent = ((amount - sold) / amount) * 100;
@@ -317,7 +318,12 @@ export default function StockScreen() {
                     onSubmit = { () => setVisibleModal(false) } 
                     onClose = { () => setVisibleModal(false) } 
                     categories={ mockedCategories }
-                />                                       
+                /> 
+                {
+                    upgradeAmount !== undefined ? (
+                        <AmountModal onClose={ () => setUpgradeAmount(undefined)} product = { upgradeAmount }></AmountModal>
+                    ) : null
+                }                                      
                 {
                     products === undefined ? (
                         <View style = { styles.loadingContainer }>
@@ -340,7 +346,7 @@ export default function StockScreen() {
                                 data = { products }                                    
                                 renderItem = { ({ item }) => {
                                     return(
-                                        <View style ={ styles.itemContainer }> 
+                                        <TouchableOpacity style ={ styles.itemContainer } onPress={ () => setUpgradeAmount(item) }> 
                                             <View style = { styles.productInfo }>
                                                 <Image source = { selectImage(item.categories) } style = { styles.productImage } resizeMode = "cover"/>
                                                 <View>
@@ -368,7 +374,7 @@ export default function StockScreen() {
                                                 </TouchableOpacity>
 
                                             </View>
-                                        </View>
+                                        </TouchableOpacity>
                                             
                                     );
                                 }}                                                                       
@@ -601,6 +607,70 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
 
 }
 
+function AmountModal({ onClose, product } :StockModalProps) {
+    const [option, setOption] = useState<undefined | string>(undefined);
+    const [increment, setIncrement] = useState("");
+    const currentAmount = product!.amount - product!.sold;
+    const [newAmount, setNewAmount] = useState(currentAmount.toString());
+    
+
+    return(
+        <Modal transparent = { true }>
+            <View style = { stylesModal.container }>
+                <View style = { stylesModal.background }>
+                    <MaterialCommunityIcons name = "close-thick" onPress={ () => onClose() } color = "#6D0808" size = { 24 } style = { stylesModal.closeIcon } />
+                    {
+                        option === undefined ? (
+                            <View style = {{ width: "90%" }}>
+                                <Text style = { stylesModal.title }>Escolha uma opção</Text>
+                                <TouchableOpacity 
+                                    style = {{ borderBottomWidth: 0.2, borderBottomColor: "rgba(0, 0, 0, 0.2)", marginTop: 30, paddingBottom: 5}}
+                                    onPress={ () => setOption("increment") }
+                                >
+                                    <Text style = { stylesModal.optionTitle }>Adicionar quantidade</Text>
+                                    <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>Escolha esta opção para incrementar a quantidade existente.</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={ () => setOption("transform")}>
+                                    <Text style = { stylesModal.optionTitle }>Atualizar quantidade</Text>
+                                    <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>Escolha esta opção para determinar uma nova quantidade para o produto.</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : option === "increment" ? (
+                            <View style = {{ width: "90%" }}>
+                                <View style = {{ marginBottom: 25}}>
+                                    <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
+                                    <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
+                                    <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade pós-incremento:</Text> { newAmount }</Text>
+                                </View>
+                                <TextInput 
+                                    autoFocus
+                                    style = {{ ...stylesModal.textInput, width: "20%", alignSelf: "center" }}                                                                    
+                                    value = { increment }
+                                    onChangeText = { (value) => {
+                                        setIncrement(value);
+                                        setNewAmount((currentAmount + Number(value)).toString());
+                                    } }  
+                                    inputMode="numeric"                                 
+                                />
+                                <TouchableOpacity style = {{ ...stylesModal.button, width: "50%", alignSelf: "center" }}>
+                                    <Text style = { stylesModal.buttonText }>Incrementar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", marginTop: 8, alignSelf: "center"}}
+                                    onPress={ () => setOption(undefined) }
+                                >
+                                    <Text style = { stylesModal.buttonText }>Voltar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : null
+                    }
+                </View>
+            </View>
+        </Modal>
+    );
+
+}
+
 const styles = StyleSheet.create({
 
     container: { 
@@ -729,6 +799,11 @@ const stylesModal = StyleSheet.create({
         fontFamily: "Inter_700Bold",
         fontSize: 22,
         textAlign: "center"
+    },
+
+    optionTitle: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 16
     },
 
     hint: {

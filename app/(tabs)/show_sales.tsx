@@ -141,7 +141,7 @@ export default function ShowSalesScreen() {
                         salesData === undefined ? (
                             <View style = { styles.loadingContainer }>
                                 <ActivityIndicator size = { 40 } color = "#6D0808"/>
-                                <Text style = { styles.loadingText }>Carregando produtos...</Text>
+                                <Text style = { styles.loadingText }>Carregando vendas...</Text>
                             </View>
                         ) : salesData.length > 0 ? (
                             <View style = {{ flex: 1, width: "90%" }}>
