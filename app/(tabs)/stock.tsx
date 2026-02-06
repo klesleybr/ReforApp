@@ -617,8 +617,34 @@ function AmountModal({ onClose, product } :StockModalProps) {
         });
         setUpdating(false);
     };
-    
 
+    const updateAmount = async() => {
+        if(product === undefined || product.id === undefined)
+            return;
+        setUpdating(true);
+        const docRef = doc(db, "products", product.id);
+        await updateDoc(docRef, {
+            amount: Number(value),
+            sold: 0,
+            updatedAt: Timestamp.now()
+        });
+        setUpdating(false);
+    };
+
+    const updateStatus = async() => {
+        if(product === undefined || product.id === undefined)
+            return;        
+        const docRef = doc(db, "products", product.id);
+        await updateDoc(docRef, {
+            status: !(product.status),
+            updatedAt: Timestamp.now()
+        });
+    }
+
+    useEffect(() => {
+
+    }, [product]);
+    
     return(
         <Modal transparent = { true }>
             <View style = { stylesModal.container }>
@@ -635,18 +661,39 @@ function AmountModal({ onClose, product } :StockModalProps) {
                                     <Text style = { stylesModal.optionTitle }>Adicionar quantidade</Text>
                                     <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>Escolha esta opção para incrementar a quantidade existente.</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={ () => setOption("transform")}>
+                                <TouchableOpacity 
+                                    style = {{ borderBottomWidth: 0.2, borderBottomColor: "rgba(0, 0, 0, 0.2)", paddingBottom: 5}}
+                                    onPress={ () => setOption("transform")}
+                                >
                                     <Text style = { stylesModal.optionTitle }>Atualizar quantidade</Text>
                                     <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>Escolha esta opção para determinar uma nova quantidade para o produto.</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={ () => {
+                                    if(product?.status) {
+                                        setOption("status");
+                                    } else {
+                                        updateStatus();
+                                        onClose();
+                                    }
+                                }}>
+                                    <Text style = { stylesModal.optionTitle }>{ product?.status ? "Desativar produto" : "Ativar produto"}</Text>
+                                    <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>
+                                        {
+                                            product?.status ? "Escolha esta opção para interromper a venda deste produto." : "Escolha esta opção para permitir a venda deste produto."
+                                        }
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         ) : option === "increment" ? (
                             <View style = {{ width: "90%" }}>
-                                <View style = {{ marginBottom: 25}}>
+                                <View>
                                     <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
                                     <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
                                     <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade pós-incremento:</Text> { newAmount }</Text>
                                 </View>
+                                <Text style = {{ fontFamily: "Inter_400Regular", textAlign: "center", marginVertical: 20 }}>
+                                    Informe a quantidade que será acrescentada:
+                                </Text>
                                 <TextInput 
                                     autoFocus
                                     style = {{ ...stylesModal.textInput, width: "20%", alignSelf: "center" }}                                                                    
@@ -660,12 +707,47 @@ function AmountModal({ onClose, product } :StockModalProps) {
                                 <TouchableOpacity 
                                     style = {{ ...stylesModal.button, width: "50%", alignSelf: "center" }}
                                     onPress = { () => {
+                                        if(Number(value) < 0 ) return;
                                         incrementAmount();
                                         setOption(undefined);                               
                                     } }
                                 >
                                     {
-                                        updating ? <ActivityIndicator color = "#FFFFFF" /> : <Text style = { stylesModal.buttonText }>incrementar</Text>
+                                        updating ? <ActivityIndicator color = "#FFFFFF" /> : <Text style = { stylesModal.buttonText }>Incrementar</Text>
+                                    }
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", marginTop: 8, alignSelf: "center"}}
+                                    onPress={ () => setOption(undefined) }
+                                >
+                                    <Text style = { stylesModal.buttonText }>Voltar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : option === "transform" ? (
+                            <View style = {{ width: "90%" }}>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
+                                <Text style = {{ fontFamily: "Inter_400Regular", textAlign: "center", marginVertical: 20 }}>
+                                    Informe a nova quantidade:
+                                </Text>
+                                <TextInput 
+                                    autoFocus
+                                    style = {{ ...stylesModal.textInput, width: "20%", alignSelf: "center" }}                                                                    
+                                    value = { value }
+                                    onChangeText = { (value) => setValue(value) }  
+                                    inputMode="numeric"                                 
+                                />
+                                <TextInput />
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", alignSelf: "center", marginTop: 0 }}
+                                    onPress = { () => {
+                                        if(Number(value) < 0 ) return;
+                                        updateAmount();
+                                        setOption(undefined);                               
+                                    } }
+                                >
+                                    {
+                                        updating ? <ActivityIndicator color = "#FFFFFF" /> : <Text style = { stylesModal.buttonText }>Atualizar</Text>
                                     }
                                 </TouchableOpacity>
                                 <TouchableOpacity 
@@ -676,11 +758,28 @@ function AmountModal({ onClose, product } :StockModalProps) {
                                 </TouchableOpacity>
                             </View>
                         ) : (
-                            <View>
-                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
-                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
-                                <Text>Informe a nova quantidade abaixo</Text>
-                                <TextInput />
+                            <View style = {{ width: "90%" }}>
+                                <Text style = {{ fontFamily: "Inter_700Bold", textAlign: "center"}}>
+                                    Esta ação impedirá a venda do produto até que seja ele seja ativado novamente. Deseja continuar?
+                                </Text>
+                                <View style = {{ flexDirection: "row", gap : 20, justifyContent: "center", marginTop: 20 }}>
+                                    <TouchableOpacity 
+                                        onPress={ () => {
+                                            updateStatus();
+                                            onClose();
+                                            setOption(undefined);
+                                        }}
+                                        style = {{ ...stylesModal.confirmationButton, backgroundColor: "#6D0808" }}
+                                    >
+                                        <Text style = { stylesModal.buttonText }>Sim</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity 
+                                        style = {{ ...stylesModal.confirmationButton }}
+                                        onPress={ () => setOption(undefined) }
+                                    >
+                                        <Text style = { stylesModal.buttonText }>Não</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         )
                     }
@@ -871,6 +970,13 @@ const stylesModal = StyleSheet.create({
         fontSize: 15,
         textAlign: "center",
         color: "#FFFFFF"
-    }
+    },
+
+    confirmationButton: {
+        backgroundColor: "#0E9608",
+        paddingVertical: 10,
+        paddingHorizontal: 30,
+        borderRadius: 5
+    },
 
 });
