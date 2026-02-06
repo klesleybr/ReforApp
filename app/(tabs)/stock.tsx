@@ -1,17 +1,10 @@
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, Image, TextInput, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
-
-import { useTheme, useNavigation } from "@react-navigation/native";
-import { DrawerNavProps } from "../_layout";
-
+import { useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
-import { DrawerContentComponentProps } from "@react-navigation/drawer";
-import GeneralModal from "@/components/general-modal";
-
-import { getFirestore, doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
-
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AddButton from "@/components/add-button";
 import Feather from '@expo/vector-icons/Feather';
@@ -19,7 +12,6 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { MultiSelect } from "react-native-element-dropdown";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 type Product = {
     id?: string,
@@ -609,9 +601,22 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
 
 function AmountModal({ onClose, product } :StockModalProps) {
     const [option, setOption] = useState<undefined | string>(undefined);
-    const [increment, setIncrement] = useState("");
+    const [value, setValue] = useState("");
     const currentAmount = product!.amount - product!.sold;
     const [newAmount, setNewAmount] = useState(currentAmount.toString());
+    const [updating, setUpdating] = useState(false);
+
+    const incrementAmount = async() => {
+        if(product === undefined || product.id === undefined)
+            return;
+        setUpdating(true);
+        const docRef = doc(db, "products", product.id);
+        await updateDoc(docRef, {
+            amount: increment(Number(value)),
+            updatedAt: Timestamp.now()
+        });
+        setUpdating(false);
+    };
     
 
     return(
@@ -645,15 +650,23 @@ function AmountModal({ onClose, product } :StockModalProps) {
                                 <TextInput 
                                     autoFocus
                                     style = {{ ...stylesModal.textInput, width: "20%", alignSelf: "center" }}                                                                    
-                                    value = { increment }
+                                    value = { value }
                                     onChangeText = { (value) => {
-                                        setIncrement(value);
+                                        setValue(value);
                                         setNewAmount((currentAmount + Number(value)).toString());
                                     } }  
                                     inputMode="numeric"                                 
                                 />
-                                <TouchableOpacity style = {{ ...stylesModal.button, width: "50%", alignSelf: "center" }}>
-                                    <Text style = { stylesModal.buttonText }>Incrementar</Text>
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", alignSelf: "center" }}
+                                    onPress = { () => {
+                                        incrementAmount();
+                                        setOption(undefined);                               
+                                    } }
+                                >
+                                    {
+                                        updating ? <ActivityIndicator color = "#FFFFFF" /> : <Text style = { stylesModal.buttonText }>incrementar</Text>
+                                    }
                                 </TouchableOpacity>
                                 <TouchableOpacity 
                                     style = {{ ...stylesModal.button, width: "50%", marginTop: 8, alignSelf: "center"}}
@@ -662,7 +675,14 @@ function AmountModal({ onClose, product } :StockModalProps) {
                                     <Text style = { stylesModal.buttonText }>Voltar</Text>
                                 </TouchableOpacity>
                             </View>
-                        ) : null
+                        ) : (
+                            <View>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
+                                <Text>Informe a nova quantidade abaixo</Text>
+                                <TextInput />
+                            </View>
+                        )
                     }
                 </View>
             </View>
