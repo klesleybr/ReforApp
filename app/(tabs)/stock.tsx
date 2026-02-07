@@ -44,140 +44,6 @@ type StockModalProps = {
     product?: Product,
 };
 
-const stockA : Product[]  = [
-
-    {        
-        name: "Pipoca",        
-        categories: [ "Alimentos" ],
-        amount: 50,
-        sold: 20,
-        unitCost: 0.20,
-        unitPrice: 0.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Doritos",        
-        categories: [ "Alimentos", "Lanches" ],
-        amount: 75,
-        sold: 36,
-        unitCost: 1.5,
-        unitPrice: 2.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Pizza pequena",        
-        categories: [ "Alimentos" ],
-        amount: 20,
-        sold: 5,
-        unitCost: 8,
-        unitPrice: 12.775,
-        status: false,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Pastel de frango",
-        categories: [ "Alimentos", "Pastéis" ],
-        amount: 15,
-        sold: 13,
-        unitCost: 2.50,
-        unitPrice: 4,
-        status: false,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Coca-cola (1L)",
-        categories: [ "Bebidas", "Refrigerantes" ],
-        amount: 23,
-        sold: 10,
-        unitCost: 9,
-        unitPrice: 11.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Coca-cola zero (1L)",
-        categories: [ "Bebidas", "Refrigerantes"],
-        amount: 23,
-        sold: 20,
-        unitCost: 10.90,
-        unitPrice: 15,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Guaraná Antártica (350mL)",        
-        categories: [ "Bebidas", "Refrigerantes" ],
-        amount: 50,
-        sold: 29,
-        unitCost: 3,
-        unitPrice: 5.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Cachorro quente",  
-        categories: [ "Alimentos", "Lanches" ],             
-        amount: 50,
-        sold: 23,
-        unitCost: 3,
-        unitPrice: 5,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Sorvete de morango",
-        description: undefined,    
-        categories: [ "Gelados", "Sorvetes" ],    
-        amount: 20,
-        sold: 2,
-        unitCost: 3,
-        unitPrice: 6.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Coxinha",
-        description: undefined,    
-        categories: [ "Alimentos", "Lanches" ],    
-        amount: 20,
-        sold: 2,
-        unitCost: 3,
-        unitPrice: 6.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Sorvete de morango",
-        description: undefined,    
-        categories: [ "Gelados", "Sorvetes" ],    
-        amount: 20,
-        sold: 2,
-        unitCost: 3,
-        unitPrice: 6.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-];
-
 const mockedCategories : Category[] = [
     {
         name: "Alimentos",
@@ -190,10 +56,31 @@ const mockedCategories : Category[] = [
         updatedAt: Timestamp.now(),
     },
     {
+        name: "Bolos",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
+        name: "Gelados",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
         name: "Lanches",
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
     },
+    {
+        name: "Refrigerantes",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
+        name: "Sucos",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    
 ]
 
 
@@ -204,48 +91,8 @@ export default function StockScreen() {
     const [products, setProducts] = useState<Product[] | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
     const { colors } = useTheme();
-
-    const queryManual = async () => {
-        const productsQuery = await getDocs(collection(db, "products"));
-        if(productsQuery.empty)
-            return;
-        
-        const productsData = productsQuery.docs; 
-        setProducts(productsData.map(e => {
-            return {
-                id: e.id,
-                name: e.get("name"),
-                description: e.get("description"),
-                categories: e.get("categories"),
-                unitPrice: e.get("price"),
-                unitCost: e.get("cost"),
-                amount: e.get("amount"),
-                sold: e.get("sold"),
-                status: e.get("status"),
-                createdAt: e.get("createdAt"),
-                updatedAt: e.get("updatedAt")
-            };
-        }).sort(function(a, b) {
-            return a.name.localeCompare(b.name);
-        }));   
-    };
-
-    const getCategories = async () => {
-        const categoriesSnapshot = await getDocs(collection(db, "categories"));
-        if(categoriesSnapshot.empty) 
-            return;
-            
-        const categoriesData = categoriesSnapshot.docs;
-        setCategories(categoriesData.map(e => {
-            return {
-                id: e.id,
-                name: e.get("name"),
-                description: e.get("description"),
-                createdAt: e.get("createdAt"),
-                updatedAt: e.get("updatedAt")
-            };
-        }));        
-    }
+    
+    let queryCategories : Category[] = [];
 
     const deleteProduct = async (id : string) => {
         try {
@@ -281,7 +128,26 @@ export default function StockScreen() {
             }));
         });
 
-        return () => unsub();
+        /*const categoriesUnsub = onSnapshot(query(collection(db, "categories")), (querySnapshot) => {
+            if(querySnapshot.empty) {
+                setCategories([]);
+                return;
+            }
+
+            const categoriesData = querySnapshot.docs;
+            queryCategories = categoriesData.map(e => {
+                return {
+                    id: e.id,
+                    name: e.get("name"),
+                    description: e.get("description") ? e.get("description") : "",
+                    createdAt: e.get("createdAt"),
+                    updatedAt: e.get("updatedAt")
+                }
+            }).sort((a,b) => a.name.localeCompare(b));                               
+            setCategories(queryCategories);                
+        });  */      
+
+        return () => {unsub()};
 
     }, []);    
 
