@@ -1,13 +1,15 @@
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { View, Text, ScrollView, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Timestamp } from "firebase/firestore";
+import { View, Text, ScrollView, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from "react-native";
+import { Timestamp, updateDoc } from "firebase/firestore";
 import Header from "@/components/header";
 import { useEffect, useState } from "react";
 import Entypo from '@expo/vector-icons/Entypo';
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, collection, doc } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavProps } from "../_layout";
+import { Dropdown } from "react-native-element-dropdown";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export type SaleData = {
     key: string,
@@ -24,7 +26,6 @@ export type SaleData = {
     updatedAt: Timestamp,
     isPaid: boolean,
     paymentMethod: string,
-
 }
 
 const mockedSales = [
@@ -85,9 +86,9 @@ const mockedSales = [
 export default function ShowSalesScreen() {
 
     const navigation = useNavigation<DrawerNavProps>();
-        
     const [expandId, setExpandId] = useState<string | undefined>(undefined);
     const [salesData, setSalesData] = useState<SaleData[] | undefined>(undefined);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
     const decimalStyle = Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
     const initialQuery = async() => {
@@ -136,7 +137,8 @@ export default function ShowSalesScreen() {
     return (
         <SafeAreaProvider>
             <SafeAreaView style = { styles.container }>
-                <Header iconType="arrow-back"/>               
+                <Header iconType="arrow-back"/>
+                    <PaymentModal id = { expandId! } visible = { showPaymentModal } onClose={ () => setShowPaymentModal(false) }/> 
                     {
                         salesData === undefined ? (
                             <View style = { styles.loadingContainer }>
@@ -199,7 +201,10 @@ export default function ShowSalesScreen() {
                                                                         <View style = { styles.buttonContainer }>
                                                                             {
                                                                                 !item.isPaid ? (
-                                                                                    <TouchableOpacity style = {{ ...styles.button, backgroundColor: "#0A6D06"}}>
+                                                                                    <TouchableOpacity 
+                                                                                        style = {{ ...styles.button, backgroundColor: "#0A6D06"}}
+                                                                                        onPress={ () => setShowPaymentModal(true) }
+                                                                                    >
                                                                                         <Text style = { styles.buttonText }>Marcar como Pago</Text>                                                                    
                                                                                     </TouchableOpacity>
                                                                                 ) : null
@@ -235,6 +240,64 @@ export default function ShowSalesScreen() {
                     }
             </SafeAreaView>
         </SafeAreaProvider>
+    );
+
+}
+
+function PaymentModal({ id, visible, onClose } : { id: string, visible : boolean, onClose: () => void }) {
+
+    const [paymentMethod, setPaymentMethod] = useState<undefined | string>(undefined);
+    const paymentMethodList = [
+        { label: "PIX", value: "PIX" },
+        { label: "Cartão de crédito", value: "Cartão de crédito" },
+        { label: "Cartão de débito", value: "Cartão de débito"},
+        { label: "Dinheiro", value: "Dinheiro"},
+        { label: "Outro", value: "Outro"}
+    ];
+
+    const updatePayment = async() => {
+        if(paymentMethod === undefined)
+            return;
+        const docRef = doc(db, "sales", id);
+        await updateDoc(docRef, {
+            paymentMethod: paymentMethod,
+            isPaid: true,
+            updatedAt: Timestamp.now()
+        });
+    };
+
+    return(
+        visible ? (
+            <Modal transparent = { true }>
+                <View style = { paymentModalStyles.container }>
+                    <View style = { paymentModalStyles.background }>
+                        <MaterialCommunityIcons name = "close-thick" onPress={ () => onClose() } color = "#6D0808" size = { 24 } style = { paymentModalStyles.closeIcon } />
+                        <Text style = { paymentModalStyles.title }>Método de pagamento</Text>
+                        <Text style = {{ fontFamily: "Inter_400Regular", textAlign: "center", opacity: 0.5, marginVertical: 20 }}>Informe o método de pagamento utilizado nesta venda.</Text>
+                        <Dropdown 
+                            data = { paymentMethodList }
+                            labelField = { "label" }
+                            valueField = { "value" }
+                            onChange={ (item) => setPaymentMethod(item.value) }
+                            placeholder = "Método de pagamento..."
+                            placeholderStyle = { paymentModalStyles.dropdownText }
+                            itemTextStyle = { paymentModalStyles.dropdownText }
+                            selectedTextStyle = { paymentModalStyles.dropdownText } 
+                            style = { paymentModalStyles.dropdown }                           
+                        />
+                        <TouchableOpacity 
+                        onPress = { () => {
+                            updatePayment();
+                            onClose();
+                        }}
+                            style = { paymentModalStyles.button }
+                        >
+                            <Text style = { paymentModalStyles.buttonText }>Salvar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        ) : null
     );
 
 }
@@ -308,6 +371,60 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         textAlign: "center",
         paddingVertical: 8
+    },
+
+});
+const paymentModalStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        alignItems: "center",
+        justifyContent: "center"     
+    },
+    background: {
+        backgroundColor: "#FFFFFF",
+        width: "90%",
+        paddingHorizontal: "5%",
+        paddingVertical: 60,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    title: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 22,
+        textAlign: "center",        
+    },
+    closeIcon: {
+        position: "absolute",
+        top: 16,
+        right: 16
+    },
+    dropdown: {    
+        width: "80%",
+        borderWidth: 1,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        borderRadius: 5,
+        marginBottom: 25
+    },
+    dropdownText: {
+        fontFamily: "Inter_400Regular",
+        fontSize: 15
+    },
+    button: {
+        height: 40,
+        width: "80%",
+        backgroundColor: "#0E9608",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 5,
+        alignSelf: "center"
+    },
+    buttonText: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 15,
+        textAlign: "center",
+        color: "#FFFFFF"
     },
 
 });
