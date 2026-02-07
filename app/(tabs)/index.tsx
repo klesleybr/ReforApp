@@ -7,8 +7,7 @@ import { StackNavigatorProps } from "../_layout";
 import { getAuth, signInWithEmailAndPassword, User } from "firebase/auth";
 import { app } from "@/config/firebaseConfig.js";
 
-export default function AuthScreen({ navigation } : StackNavigatorProps) { 
-
+export default function AuthScreen({ navigation } : StackNavigatorProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");    
     const anyFieldEmpty : boolean = email == "" || password == "";

@@ -106,7 +106,7 @@ export default function StockScreen() {
 
         const unsub = onSnapshot(query(collection(db, "products")), (querySnapshot) => {
             if(querySnapshot.empty)
-                return;
+                setProducts([]);
 
             const productsData = querySnapshot.docs;
             setProducts(productsData.map(e => {
@@ -315,11 +315,11 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                 createdAt: Timestamp.now(), 
                 updatedAt: Timestamp.now() 
             });
+            onClose(); 
             setSelectedCategories([]);
             setCostString("");
             setPriceString("");
-            setProduct(productReference),            
-            onClose();                      
+            setProduct(productReference);                                 
         } catch(e) {
             console.log("Erro ao adicionar o produto: " + e);
         }        
@@ -375,7 +375,7 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                             <TextInput 
                                 style = { stylesModal.textInput } 
                                 value = { costString }
-                                onChangeText= { (value) => { console.log(value), setCostString((prev) => formatDecimal(value, prev, "cost"))} }
+                                onChangeText= { (value) => { setCostString((prev) => formatDecimal(value, prev, "cost"))} }
                                 inputMode = "decimal" 
                             />
                         </View>                     
@@ -686,8 +686,8 @@ const styles = StyleSheet.create({
         marginBottom: 20
     },
     button: {
-        height: 32,
-        width: "50%",
+        height: 40,
+        paddingHorizontal: "10%",
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#0E9608",
@@ -696,6 +696,7 @@ const styles = StyleSheet.create({
     buttonTitle: {
         color: "#FFFFFF",
         fontFamily: "Inter_700Bold",
+        fontSize: 15
     },
     productsContainer: {
         marginBottom: 23, 

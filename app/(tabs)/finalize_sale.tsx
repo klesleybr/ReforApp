@@ -16,9 +16,11 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
     const { colors } = useTheme();
     const { selectedProducts, totalValue } = route.params;
     const paymentMethodList = [
-        { label: "PIX", value: "PIX" },
-        { label: "Dinheiro", value: "dinheiro" },  
-        { label: "Outro", value : "outro"}      
+        { label: "Crédito", value: "Cartão de crédito" },
+        { label: "Débito", value: "Cartão de débito" },
+        { label: "Dinheiro", value: "Dinheiro" },        
+        { label: "PIX", value: "PIX" },          
+        { label: "Outro", value: "Outro"},        
     ];
     const [paymentMethod, setPaymentMethod] = useState<string>("");
     const [isPaid, setIsPaid] = useState<boolean>(false);
@@ -100,7 +102,7 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                                         value = { paymentMethod }
                                         labelField = "label"
                                         valueField = "value"                                   
-                                        onChange = { (item) => {setPaymentMethod(item.value); console.log(paymentMethod)} }                                    
+                                        onChange = { (item) => {setPaymentMethod(item.value)} }                                    
                                         placeholder = "Selecione..."
                                         placeholderStyle = {{ opacity: 0.5 }}
                                         style = { styles.dropdown }                                
@@ -124,7 +126,10 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                                                 size = { 18 }
                                             />
                                             <Text style = { styles.checkboxLabel}>
-                                                Marque esta caixa para <Text style = {{ fontFamily: "Inter_700Bold" }}>confirmar o pagamento</Text> { paymentMethod === "PIX" ? "via PIX." : "com dinheiro." }
+                                                Marque esta caixa para <Text style = {{ fontFamily: "Inter_700Bold" }}>confirmar o pagamento </Text> 
+                                                { paymentMethod === "PIX" ? "via PIX." : paymentMethod === "Cartão de crédito" ? "com cartão de crédito." : 
+                                                    paymentMethod === "Cartão de débito" ? "com cartão de débito." : paymentMethod === "Dinheiro" ? "com dinheiro." : 
+                                                        "com outra forma." }
                                             </Text>
                                         </View>
 
@@ -157,18 +162,20 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                                     <Text style = {{ color: "#000000" }}>Status: </Text>{ isPaid ? "PAGO" : "NÃO PAGO" }
                                 </Text>
                             </View>
-                             <TouchableOpacity 
-                                style = {{ ...styles.button, backgroundColor: "#770E0E", marginBottom: 8 }}
-                                onPress={ () => navigation.popTo("Sales") }
-                            >
-                                <Text style = { styles.buttonText }>Registrar outra Venda</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                style = {{ ...styles.button, backgroundColor: "#770E0E"}}
-                                onPress = { () => navigation.popTo("Home") }
-                            >
-                                <Text style = { styles.buttonText }>Ir para o início</Text>
-                            </TouchableOpacity>
+                            <View>
+                                <TouchableOpacity 
+                                    style = {{ ...styles.button, backgroundColor: "#770E0E", marginBottom: 8 }}
+                                    onPress={ () => navigation.popTo("Sales") }
+                                >
+                                    <Text style = { styles.buttonText }>Registrar outra Venda</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style = {{ ...styles.button, backgroundColor: "#770E0E"}}
+                                    onPress = { () => navigation.popTo("Home") }
+                                >
+                                    <Text style = { styles.buttonText }>Ir para o início</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     )
                 }
@@ -269,7 +276,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "#FFFFFF",
         textAlign: "center",
-        paddingVertical: 8
+        paddingVertical: 8,
+        width: 300
     },
     finalizedContainer: {
         height: "90%",
