@@ -7,8 +7,7 @@ import { StackNavigatorProps } from "../_layout";
 import { getAuth, signInWithEmailAndPassword, User } from "firebase/auth";
 import { app } from "@/config/firebaseConfig.js";
 
-export default function AuthScreen({ navigation } : StackNavigatorProps) { 
-
+export default function AuthScreen({ navigation } : StackNavigatorProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");    
     const anyFieldEmpty : boolean = email == "" || password == "";
@@ -60,7 +59,7 @@ export default function AuthScreen({ navigation } : StackNavigatorProps) {
                     <TouchableOpacity 
                         style = { [styles.button, { borderColor: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF"}] } 
                         onPress={ () => navigation.navigate("Home") }
-                        disabled = { anyFieldEmpty ? true : false }
+                        disabled = { false }
                     >
                         <Text style = { [styles.text, { color: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF" }] }>Entrar</Text>
                     </TouchableOpacity>                    

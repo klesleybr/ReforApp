@@ -1,16 +1,19 @@
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { View, Text, ScrollView, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Timestamp } from "firebase/firestore";
+import { View, Text, ScrollView, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from "react-native";
+import { getDoc, increment, onSnapshot, query, Timestamp, updateDoc } from "firebase/firestore";
 import Header from "@/components/header";
 import { useEffect, useState } from "react";
 import Entypo from '@expo/vector-icons/Entypo';
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, collection, doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavProps } from "../_layout";
+import { Dropdown } from "react-native-element-dropdown";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Confirmation from "@/components/confirmation";
 
 export type SaleData = {
-    key: string,
+    id: string,
     products: {
         id: string,
         name: string,
@@ -24,130 +27,104 @@ export type SaleData = {
     updatedAt: Timestamp,
     isPaid: boolean,
     paymentMethod: string,
-
 }
-
-const mockedSales = [
-
-    {
-        id: "kdjsjfefoefefe",
-        products: [
-            {
-                id: "kjowdkwk2e4",
-                name: "Bolo de morango",
-                amount: 3,
-                partialTotal: 12,
-                unitPrice: 4
-            },
-            {
-                id: "902dkfifeksff",
-                name: "Chocolate quente",
-                amount: 2,
-                partialTotal: 14,
-                unitPrice: 7
-            },
-        ],
-        customerName: "Caio Fábio",
-        totalValue: 26,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        isPaid: false,
-        paymentMethod: "outro"
-    },
-    {
-        id:"jdjdsjdjsldejfeif",
-        products: [
-            {
-                id: "9kdfj30fjjdf",
-                name: "Coca-cola (2L)",
-                amount: 1,
-                partialTotal: 10,
-                unitPrice: 10
-            },
-            {
-                id: "ddfsoas02e92",
-                name: "Suco de laranja",
-                amount: 4,
-                partialTotal: 20,
-                unitPrice: 5
-            }
-        ],
-        customerName: "Larissa Melo",
-        totalValue: 30,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        isPaid: true,
-        paymentMethod: "PIX"
-    }
-
-]
 
 export default function ShowSalesScreen() {
 
     const navigation = useNavigation<DrawerNavProps>();
-        
-    const [expandId, setExpandId] = useState<string | undefined>(undefined);
+    const [expandItem, setExpandItem] = useState<SaleData | undefined>(undefined);
     const [salesData, setSalesData] = useState<SaleData[] | undefined>(undefined);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const decimalStyle = Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-    const initialQuery = async() => {
-        const querySnapshot = await getDocs(collection(db, "sales"));
-        if(querySnapshot.empty) 
-            return;
+    useEffect(() => {        
+        const unsub = onSnapshot(query(collection(db, "sales")), (querySnapshot) => {
+            if(querySnapshot.empty)
+                setSalesData([]);
 
-        setSalesData(querySnapshot.docs.map(e => {
-                const listProducts : any[] = e.get("products");
-                var total : number = 0;
+            const sales = querySnapshot.docs;            
+            setSalesData(sales.map(e => {
+                    const productsList : any[] = e.get("products");
+                    var total = 0;
+                    productsList.forEach(e => {
+                        total = total + (e.amount * e.unitPrice);
+                    });
 
-                listProducts.forEach((e) => {
-                    total = total + (e.amount * e.unitPrice);
-                });
+                    return {
+                        id: e.id,
+                        products: productsList.map((e) => {
+                            return {
+                                id: e.id as string,
+                                name: e.name as string,
+                                amount: e.amount as number,
+                                unitPrice: e.unitPrice as number,
+                                partialTotal: (e.amount * e.unitPrice) as number
+                            };
+                        }),
+                        customerName: e.get("customerName"),
+                        totalValue: total,
+                        createdAt: e.get("createdAt"),
+                        updatedAt: e.get("updatedAt"),
+                        isPaid: e.get("isPaid"),
+                        paymentMethod: e.get("paymentMethod")
+                    }
+                }).sort((a, b) => {
+                    if(a.createdAt > b.createdAt) return -1;
+                    if(a.createdAt < b.createdAt) return 1;
+                    return 0;
+                })
+            );
+        });
 
-                return {
-                    key: e.id,
-                    products: listProducts.map((e) => {
-                        return {
-                            id: e.id as string,
-                            name: e.name as string,
-                            amount: e.amount as number,
-                            unitPrice: e.unitPrice as number,
-                            partialTotal: (e.amount * e.unitPrice) as number
-                        };
-                    }),
-                    customerName: e.get("customerName"),
-                    totalValue: total,
-                    createdAt: e.get("createdAt"),
-                    updatedAt: e.get("updatedAt"),
-                    isPaid: e.get("isPaid"),
-                    paymentMethod: e.get("paymentMethod")
-                };
-            }).sort((a, b) => {
-                if(a.createdAt > b.createdAt) return -1;
-                if(a.createdAt < b.createdAt) return 1;
-                return 0;
-            })
-        );
-    };
-
-    useEffect(() => {
-        initialQuery();
-    }, []);
+        return () => unsub();
+    }, []);    
     
     return (
         <SafeAreaProvider>
             <SafeAreaView style = { styles.container }>
-                <Header iconType="arrow-back"/>               
+                <Header iconType="arrow-back"/>
+                    <PaymentModal id = { expandItem?.id } visible = { showPaymentModal } onClose={ () => setShowPaymentModal(false) }/> 
+                    <Confirmation 
+                        visible = { showConfirmationModal } 
+                        title = "Confirme a exclusão" 
+                        description = "A exclusão da venda é uma ação irreversível. Você deseja prosseguir com a ação?"
+                        onClose = { () => setShowConfirmationModal(false) }
+                        onConfirmation = { async() => {
+                            await deleteDoc(doc(db, "sales", expandItem!.id))                             
+                        }}                        
+                        checkboxLabel = "Desconsiderar esta venda na contagem de produtos."
+                        checkbox = {true}
+                        onConfirmationWithChekboxTrue={ async() => {
+                            const saleRef = doc(db, "sales", expandItem!.id);
+                            expandItem?.products.forEach(async e => {
+                                const productRef = doc(db, "products", e.id);
+                                const productSnap = await getDoc(productRef);
+                                if(!productSnap.exists)
+                                    return;
+                                const sold = productSnap.get("sold") as number;                                
+                                if(sold !== 0) {
+                                    await updateDoc(productRef, {
+                                        sold: sold - e.amount <= 0 ? 0 : sold - e.amount,
+                                        updatedAt: Timestamp.now()
+                                    });
+                                }                                                                
+                            });
+                            await deleteDoc(saleRef);                            
+                        }}
+                    />
                     {
                         salesData === undefined ? (
                             <View style = { styles.loadingContainer }>
                                 <ActivityIndicator size = { 40 } color = "#6D0808"/>
-                                <Text style = { styles.loadingText }>Carregando produtos...</Text>
+                                <Text style = { styles.loadingText }>Carregando vendas...</Text>
                             </View>
                         ) : salesData.length > 0 ? (
                             <View style = {{ flex: 1, width: "90%" }}>
                                 <FlatList                                  
                                     showsVerticalScrollIndicator = { false }
-                                    style = {{ paddingVertical: 30, flex: 1 }}                      
+                                    style = {{ paddingVertical: 30, flex: 1 }}  
+                                    keyExtractor={ item => item.id }                    
                                     data = { salesData }
                                     renderItem={ ({ item }) => {                            
                                             return(
@@ -166,19 +143,19 @@ export default function ShowSalesScreen() {
                                                                     </Text>
                                                                 </View>
                                                             </View>
-                                                            <TouchableOpacity onPress={ () => setExpandId((prev) => {
-                                                                if(expandId !== undefined && expandId !== item.key)                                                        
-                                                                    return item.key;
-                                                                if(expandId === item.key)
+                                                            <TouchableOpacity onPress={ () => setExpandItem(() => {
+                                                                if(expandItem !== undefined && expandItem !== item)                                                        
+                                                                    return item;
+                                                                if(expandItem === item)
                                                                     return undefined;
-                                                                return item.key;                                                    
+                                                                return item;                                                    
                                                             }) }>
-                                                                <Entypo name = { expandId === item.key ? "triangle-up" : "triangle-down" }/>
+                                                                <Entypo name = { expandItem === item ? "triangle-up" : "triangle-down" }/>
                                                             </TouchableOpacity>
                                                         </View>
                                                         
                                                         {
-                                                            expandId === item.key ? (
+                                                            expandItem === item ? (
                                                                 <View style = { styles.listItemsContainer }>
                                                                     <View>
                                                                         <Text style = {{ ...styles.listItemsText, fontFamily: "Inter_700Bold" }}>Itens:</Text>
@@ -186,7 +163,7 @@ export default function ShowSalesScreen() {
                                                                             {
                                                                                 item.products.map(e => {
                                                                                     return(
-                                                                                        <Text style = { styles.listItemsText }>
+                                                                                        <Text style = { styles.listItemsText } key={ e.id }>
                                                                                             { `${e.amount} ${e.name} (${decimalStyle.format(e.unitPrice)}/un) = ${decimalStyle.format(e.partialTotal)}` }
                                                                                         </Text>
                                                                                     );
@@ -199,12 +176,18 @@ export default function ShowSalesScreen() {
                                                                         <View style = { styles.buttonContainer }>
                                                                             {
                                                                                 !item.isPaid ? (
-                                                                                    <TouchableOpacity style = {{ ...styles.button, backgroundColor: "#0A6D06"}}>
+                                                                                    <TouchableOpacity 
+                                                                                        style = {{ ...styles.button, backgroundColor: "#0A6D06"}}
+                                                                                        onPress={ () => setShowPaymentModal(true) }
+                                                                                    >
                                                                                         <Text style = { styles.buttonText }>Marcar como Pago</Text>                                                                    
                                                                                     </TouchableOpacity>
                                                                                 ) : null
                                                                             }
-                                                                            <TouchableOpacity style = {{ ...styles.button, backgroundColor: "#770E0E"}}>
+                                                                            <TouchableOpacity 
+                                                                                style = {{ ...styles.button, backgroundColor: "#770E0E"}}
+                                                                                onPress={ () => setShowConfirmationModal(true)}
+                                                                            >
                                                                                 <Text style = { styles.buttonText }>Excluir Venda</Text>                                                                    
                                                                             </TouchableOpacity>
                                                                         </View>                                                
@@ -235,6 +218,64 @@ export default function ShowSalesScreen() {
                     }
             </SafeAreaView>
         </SafeAreaProvider>
+    );
+
+}
+
+function PaymentModal({ id, visible, onClose } : { id?: string, visible : boolean, onClose: () => void }) {
+
+    const [paymentMethod, setPaymentMethod] = useState<undefined | string>(undefined);
+    const paymentMethodList = [
+        { label: "PIX", value: "PIX" },
+        { label: "Cartão de crédito", value: "Cartão de crédito" },
+        { label: "Cartão de débito", value: "Cartão de débito"},
+        { label: "Dinheiro", value: "Dinheiro"},
+        { label: "Outro", value: "Outro"}
+    ];
+
+    const updatePayment = async() => {
+        if(paymentMethod === undefined || id === undefined)
+            return;
+        const docRef = doc(db, "sales", id);
+        await updateDoc(docRef, {
+            paymentMethod: paymentMethod,
+            isPaid: true,
+            updatedAt: Timestamp.now()
+        });
+    };
+
+    return(
+        visible ? (
+            <Modal transparent = { true }>
+                <View style = { paymentModalStyles.container }>
+                    <View style = { paymentModalStyles.background }>
+                        <MaterialCommunityIcons name = "close-thick" onPress={ () => onClose() } color = "#6D0808" size = { 24 } style = { paymentModalStyles.closeIcon } />
+                        <Text style = { paymentModalStyles.title }>Método de pagamento</Text>
+                        <Text style = {{ fontFamily: "Inter_400Regular", textAlign: "center", opacity: 0.5, marginVertical: 20 }}>Informe o método de pagamento utilizado nesta venda.</Text>
+                        <Dropdown 
+                            data = { paymentMethodList }
+                            labelField = { "label" }
+                            valueField = { "value" }
+                            onChange={ (item) => setPaymentMethod(item.value) }
+                            placeholder = "Método de pagamento..."
+                            placeholderStyle = { paymentModalStyles.dropdownText }
+                            itemTextStyle = { paymentModalStyles.dropdownText }
+                            selectedTextStyle = { paymentModalStyles.dropdownText } 
+                            style = { paymentModalStyles.dropdown }                           
+                        />
+                        <TouchableOpacity 
+                        onPress = { () => {
+                            updatePayment();
+                            onClose();
+                        }}
+                            style = { paymentModalStyles.button }
+                        >
+                            <Text style = { paymentModalStyles.buttonText }>Salvar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        ) : null
     );
 
 }
@@ -308,6 +349,60 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         textAlign: "center",
         paddingVertical: 8
+    },
+
+});
+const paymentModalStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        alignItems: "center",
+        justifyContent: "center"     
+    },
+    background: {
+        backgroundColor: "#FFFFFF",
+        width: "90%",
+        paddingHorizontal: "5%",
+        paddingVertical: 60,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    title: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 22,
+        textAlign: "center",        
+    },
+    closeIcon: {
+        position: "absolute",
+        top: 16,
+        right: 16
+    },
+    dropdown: {    
+        width: "80%",
+        borderWidth: 1,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        borderRadius: 5,
+        marginBottom: 25
+    },
+    dropdownText: {
+        fontFamily: "Inter_400Regular",
+        fontSize: 15
+    },
+    button: {
+        height: 40,
+        width: "80%",
+        backgroundColor: "#0E9608",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 5,
+        alignSelf: "center"
+    },
+    buttonText: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 15,
+        textAlign: "center",
+        color: "#FFFFFF"
     },
 
 });

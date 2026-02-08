@@ -52,14 +52,14 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
                                 <View style = { styles.saleOptionsContainer }>
                                     <DrawerItem                                         
                                         label = "Realizar Venda"
-                                        onPress={ () => navigation.navigate("Screens", { screen: "Sales" }) }
+                                        onPress={ () => {navigation.navigate("Screens", { screen: "Sales" }); setExpandSale(false)} }
                                         labelStyle = {{ ...styles.label, opacity: 0.8, fontSize: 15 }}
                                         icon = { () => <Entypo name="triangle-right" size={22} color = "#FFFFFF" style = {{ opacity: 0.8, marginLeft: "10%" }}/> }
                                         style = { styles.saleOptions }
                                     />
                                     <DrawerItem 
                                         label = "Consultar Vendas"
-                                        onPress={ () => navigation.navigate("Screens", { screen: "ShowSales" }) }
+                                        onPress={ () => {navigation.navigate("Screens", { screen: "ShowSales" }); setExpandSale(false)} }
                                         labelStyle = {{ ...styles.label, opacity: 0.8, fontSize: 15 }}
                                         icon = { () => <Entypo name="triangle-right" size={22} color = "#FFFFFF" style = {{ opacity: 0.8, marginLeft: "10%" }}/> }
                                     />

@@ -1,17 +1,10 @@
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, Image, TextInput, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
-
-import { useTheme, useNavigation } from "@react-navigation/native";
-import { DrawerNavProps } from "../_layout";
-
+import { useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
-import { DrawerContentComponentProps } from "@react-navigation/drawer";
-import GeneralModal from "@/components/general-modal";
-
-import { getFirestore, doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
-
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AddButton from "@/components/add-button";
 import Feather from '@expo/vector-icons/Feather';
@@ -47,142 +40,9 @@ type StockModalProps = {
     onClose: () => void;
     categories?: Category[],
     productData?: Product,
-    isVisible?: boolean
+    isVisible?: boolean,
+    product?: Product,
 };
-
-const stockA : Product[]  = [
-
-    {        
-        name: "Pipoca",        
-        categories: [ "Alimentos" ],
-        amount: 50,
-        sold: 20,
-        unitCost: 0.20,
-        unitPrice: 0.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Doritos",        
-        categories: [ "Alimentos", "Lanches" ],
-        amount: 75,
-        sold: 36,
-        unitCost: 1.5,
-        unitPrice: 2.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Pizza pequena",        
-        categories: [ "Alimentos" ],
-        amount: 20,
-        sold: 5,
-        unitCost: 8,
-        unitPrice: 12.775,
-        status: false,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Pastel de frango",
-        categories: [ "Alimentos", "Pastéis" ],
-        amount: 15,
-        sold: 13,
-        unitCost: 2.50,
-        unitPrice: 4,
-        status: false,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Coca-cola (1L)",
-        categories: [ "Bebidas", "Refrigerantes" ],
-        amount: 23,
-        sold: 10,
-        unitCost: 9,
-        unitPrice: 11.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Coca-cola zero (1L)",
-        categories: [ "Bebidas", "Refrigerantes"],
-        amount: 23,
-        sold: 20,
-        unitCost: 10.90,
-        unitPrice: 15,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-    {
-        name: "Guaraná Antártica (350mL)",        
-        categories: [ "Bebidas", "Refrigerantes" ],
-        amount: 50,
-        sold: 29,
-        unitCost: 3,
-        unitPrice: 5.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Cachorro quente",  
-        categories: [ "Alimentos", "Lanches" ],             
-        amount: 50,
-        sold: 23,
-        unitCost: 3,
-        unitPrice: 5,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Sorvete de morango",
-        description: undefined,    
-        categories: [ "Gelados", "Sorvetes" ],    
-        amount: 20,
-        sold: 2,
-        unitCost: 3,
-        unitPrice: 6.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Coxinha",
-        description: undefined,    
-        categories: [ "Alimentos", "Lanches" ],    
-        amount: 20,
-        sold: 2,
-        unitCost: 3,
-        unitPrice: 6.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-    {
-        name: "Sorvete de morango",
-        description: undefined,    
-        categories: [ "Gelados", "Sorvetes" ],    
-        amount: 20,
-        sold: 2,
-        unitCost: 3,
-        unitPrice: 6.50,
-        status: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-    },
-
-];
 
 const mockedCategories : Category[] = [
     {
@@ -196,61 +56,43 @@ const mockedCategories : Category[] = [
         updatedAt: Timestamp.now(),
     },
     {
+        name: "Bolos",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
+        name: "Gelados",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
         name: "Lanches",
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
     },
+    {
+        name: "Refrigerantes",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    {
+        name: "Sucos",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+    },
+    
 ]
 
 
 export default function StockScreen() {
 
     const [visibleModal, setVisibleModal] = useState(false);
+    const [upgradeAmount, setUpgradeAmount] = useState<Product | undefined>(undefined);
     const [products, setProducts] = useState<Product[] | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
     const { colors } = useTheme();
-
-    const queryManual = async () => {
-        const productsQuery = await getDocs(collection(db, "products"));
-        if(productsQuery.empty)
-            return;
-        
-        const productsData = productsQuery.docs; 
-        setProducts(productsData.map(e => {
-            return {
-                id: e.id,
-                name: e.get("name"),
-                description: e.get("description"),
-                categories: e.get("categories"),
-                unitPrice: e.get("price"),
-                unitCost: e.get("cost"),
-                amount: e.get("amount"),
-                sold: e.get("sold"),
-                status: e.get("status"),
-                createdAt: e.get("createdAt"),
-                updatedAt: e.get("updatedAt")
-            };
-        }).sort(function(a, b) {
-            return a.name.localeCompare(b.name);
-        }));   
-    };
-
-    const getCategories = async () => {
-        const categoriesSnapshot = await getDocs(collection(db, "categories"));
-        if(categoriesSnapshot.empty) 
-            return;
-            
-        const categoriesData = categoriesSnapshot.docs;
-        setCategories(categoriesData.map(e => {
-            return {
-                id: e.id,
-                name: e.get("name"),
-                description: e.get("description"),
-                createdAt: e.get("createdAt"),
-                updatedAt: e.get("updatedAt")
-            };
-        }));        
-    }
+    
+    let queryCategories : Category[] = [];
 
     const deleteProduct = async (id : string) => {
         try {
@@ -264,7 +106,7 @@ export default function StockScreen() {
 
         const unsub = onSnapshot(query(collection(db, "products")), (querySnapshot) => {
             if(querySnapshot.empty)
-                return;
+                setProducts([]);
 
             const productsData = querySnapshot.docs;
             setProducts(productsData.map(e => {
@@ -281,16 +123,33 @@ export default function StockScreen() {
                     createdAt: e.get("createdAt"),
                     updatedAt: e.get("updatedAt")
                 }
+            }).sort(function(a, b) {
+                return a.name.localeCompare(b.name);
             }));
         });
 
-        return () => unsub();
+        /*const categoriesUnsub = onSnapshot(query(collection(db, "categories")), (querySnapshot) => {
+            if(querySnapshot.empty) {
+                setCategories([]);
+                return;
+            }
 
-    }, []);
+            const categoriesData = querySnapshot.docs;
+            queryCategories = categoriesData.map(e => {
+                return {
+                    id: e.id,
+                    name: e.get("name"),
+                    description: e.get("description") ? e.get("description") : "",
+                    createdAt: e.get("createdAt"),
+                    updatedAt: e.get("updatedAt")
+                }
+            }).sort((a,b) => a.name.localeCompare(b));                               
+            setCategories(queryCategories);                
+        });  */      
 
-    useEffect(() => {        
-        //query();        
-    }, [products, setProducts]);    
+        return () => {unsub()};
+
+    }, []);    
 
     const reposition = (amount : number, sold : number) : boolean => {
         const percent = ((amount - sold) / amount) * 100;
@@ -317,7 +176,12 @@ export default function StockScreen() {
                     onSubmit = { () => setVisibleModal(false) } 
                     onClose = { () => setVisibleModal(false) } 
                     categories={ mockedCategories }
-                />                                       
+                /> 
+                {
+                    upgradeAmount !== undefined ? (
+                        <AmountModal onClose={ () => setUpgradeAmount(undefined)} product = { upgradeAmount }></AmountModal>
+                    ) : null
+                }                                      
                 {
                     products === undefined ? (
                         <View style = { styles.loadingContainer }>
@@ -340,7 +204,7 @@ export default function StockScreen() {
                                 data = { products }                                    
                                 renderItem = { ({ item }) => {
                                     return(
-                                        <View style ={ styles.itemContainer }> 
+                                        <TouchableOpacity style ={ styles.itemContainer } onPress={ () => setUpgradeAmount(item) }> 
                                             <View style = { styles.productInfo }>
                                                 <Image source = { selectImage(item.categories) } style = { styles.productImage } resizeMode = "cover"/>
                                                 <View>
@@ -368,7 +232,7 @@ export default function StockScreen() {
                                                 </TouchableOpacity>
 
                                             </View>
-                                        </View>
+                                        </TouchableOpacity>
                                             
                                     );
                                 }}                                                                       
@@ -451,11 +315,11 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                 createdAt: Timestamp.now(), 
                 updatedAt: Timestamp.now() 
             });
+            onClose(); 
             setSelectedCategories([]);
             setCostString("");
             setPriceString("");
-            setProduct(productReference),            
-            onClose();                      
+            setProduct(productReference);                                 
         } catch(e) {
             console.log("Erro ao adicionar o produto: " + e);
         }        
@@ -511,7 +375,7 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                             <TextInput 
                                 style = { stylesModal.textInput } 
                                 value = { costString }
-                                onChangeText= { (value) => { console.log(value), setCostString((prev) => formatDecimal(value, prev, "cost"))} }
+                                onChangeText= { (value) => { setCostString((prev) => formatDecimal(value, prev, "cost"))} }
                                 inputMode = "decimal" 
                             />
                         </View>                     
@@ -601,6 +465,197 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
 
 }
 
+function AmountModal({ onClose, product } :StockModalProps) {
+    const [option, setOption] = useState<undefined | string>(undefined);
+    const [value, setValue] = useState("");
+    const currentAmount = product!.amount - product!.sold;
+    const [newAmount, setNewAmount] = useState(currentAmount.toString());
+    const [updating, setUpdating] = useState(false);
+
+    const incrementAmount = async() => {
+        if(product === undefined || product.id === undefined)
+            return;
+        setUpdating(true);
+        const docRef = doc(db, "products", product.id);
+        await updateDoc(docRef, {
+            amount: increment(Number(value)),
+            updatedAt: Timestamp.now()
+        });
+        setUpdating(false);
+    };
+
+    const updateAmount = async() => {
+        if(product === undefined || product.id === undefined)
+            return;
+        setUpdating(true);
+        const docRef = doc(db, "products", product.id);
+        await updateDoc(docRef, {
+            amount: Number(value),
+            sold: 0,
+            updatedAt: Timestamp.now()
+        });
+        setUpdating(false);
+    };
+
+    const updateStatus = async() => {
+        if(product === undefined || product.id === undefined)
+            return;        
+        const docRef = doc(db, "products", product.id);
+        await updateDoc(docRef, {
+            status: !(product.status),
+            updatedAt: Timestamp.now()
+        });
+    }
+
+    useEffect(() => {
+
+    }, [product]);
+    
+    return(
+        <Modal transparent = { true }>
+            <View style = { stylesModal.container }>
+                <View style = { stylesModal.background }>
+                    <MaterialCommunityIcons name = "close-thick" onPress={ () => onClose() } color = "#6D0808" size = { 24 } style = { stylesModal.closeIcon } />
+                    {
+                        option === undefined ? (
+                            <View style = {{ width: "90%" }}>
+                                <Text style = { stylesModal.title }>Escolha uma opção</Text>
+                                <TouchableOpacity 
+                                    style = {{ borderBottomWidth: 0.2, borderBottomColor: "rgba(0, 0, 0, 0.2)", marginTop: 30, paddingBottom: 5}}
+                                    onPress={ () => setOption("increment") }
+                                >
+                                    <Text style = { stylesModal.optionTitle }>Adicionar quantidade</Text>
+                                    <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>Escolha esta opção para incrementar a quantidade existente.</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style = {{ borderBottomWidth: 0.2, borderBottomColor: "rgba(0, 0, 0, 0.2)", paddingBottom: 5}}
+                                    onPress={ () => setOption("transform")}
+                                >
+                                    <Text style = { stylesModal.optionTitle }>Atualizar quantidade</Text>
+                                    <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>Escolha esta opção para determinar uma nova quantidade para o produto.</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={ () => {
+                                    if(product?.status) {
+                                        setOption("status");
+                                    } else {
+                                        updateStatus();
+                                        onClose();
+                                    }
+                                }}>
+                                    <Text style = { stylesModal.optionTitle }>{ product?.status ? "Desativar produto" : "Ativar produto"}</Text>
+                                    <Text style = {{ ...stylesModal.hint, textAlign: "left", marginVertical: 0, width: "100%" }}>
+                                        {
+                                            product?.status ? "Escolha esta opção para interromper a venda deste produto." : "Escolha esta opção para permitir a venda deste produto."
+                                        }
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : option === "increment" ? (
+                            <View style = {{ width: "90%" }}>
+                                <View>
+                                    <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
+                                    <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
+                                    <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade pós-incremento:</Text> { newAmount }</Text>
+                                </View>
+                                <Text style = {{ fontFamily: "Inter_400Regular", textAlign: "center", marginVertical: 20 }}>
+                                    Informe a quantidade que será acrescentada:
+                                </Text>
+                                <TextInput 
+                                    autoFocus
+                                    style = {{ ...stylesModal.textInput, width: "20%", alignSelf: "center" }}                                                                    
+                                    value = { value }
+                                    onChangeText = { (value) => {
+                                        setValue(value);
+                                        setNewAmount((currentAmount + Number(value)).toString());
+                                    } }  
+                                    inputMode="numeric"                                 
+                                />
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", alignSelf: "center" }}
+                                    onPress = { () => {
+                                        if(Number(value) < 0 ) return;
+                                        incrementAmount();
+                                        setOption(undefined);                               
+                                    } }
+                                >
+                                    {
+                                        updating ? <ActivityIndicator color = "#FFFFFF" /> : <Text style = { stylesModal.buttonText }>Incrementar</Text>
+                                    }
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", marginTop: 8, alignSelf: "center"}}
+                                    onPress={ () => setOption(undefined) }
+                                >
+                                    <Text style = { stylesModal.buttonText }>Voltar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : option === "transform" ? (
+                            <View style = {{ width: "90%" }}>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 18}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Produto:</Text> {product?.name}</Text>
+                                <Text style = {{ fontFamily: "Inter_400Regular", fontSize: 15}}><Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade atual:</Text> { currentAmount }</Text>
+                                <Text style = {{ fontFamily: "Inter_400Regular", textAlign: "center", marginVertical: 20 }}>
+                                    Informe a nova quantidade:
+                                </Text>
+                                <TextInput 
+                                    autoFocus
+                                    style = {{ ...stylesModal.textInput, width: "20%", alignSelf: "center" }}                                                                    
+                                    value = { value }
+                                    onChangeText = { (value) => setValue(value) }  
+                                    inputMode="numeric"                                 
+                                />
+                                <TextInput />
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", alignSelf: "center", marginTop: 0 }}
+                                    onPress = { () => {
+                                        if(Number(value) < 0 ) return;
+                                        updateAmount();
+                                        setOption(undefined);                               
+                                    } }
+                                >
+                                    {
+                                        updating ? <ActivityIndicator color = "#FFFFFF" /> : <Text style = { stylesModal.buttonText }>Atualizar</Text>
+                                    }
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style = {{ ...stylesModal.button, width: "50%", marginTop: 8, alignSelf: "center"}}
+                                    onPress={ () => setOption(undefined) }
+                                >
+                                    <Text style = { stylesModal.buttonText }>Voltar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style = {{ width: "90%" }}>
+                                <Text style = {{ fontFamily: "Inter_700Bold", textAlign: "center"}}>
+                                    Esta ação impedirá a venda do produto até que seja ele seja ativado novamente. Deseja continuar?
+                                </Text>
+                                <View style = {{ flexDirection: "row", gap : 20, justifyContent: "center", marginTop: 20 }}>
+                                    <TouchableOpacity 
+                                        onPress={ () => {
+                                            updateStatus();
+                                            onClose();
+                                            setOption(undefined);
+                                        }}
+                                        style = {{ ...stylesModal.confirmationButton, backgroundColor: "#6D0808" }}
+                                    >
+                                        <Text style = { stylesModal.buttonText }>Sim</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity 
+                                        style = {{ ...stylesModal.confirmationButton }}
+                                        onPress={ () => setOption(undefined) }
+                                    >
+                                        <Text style = { stylesModal.buttonText }>Não</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )
+                    }
+                </View>
+            </View>
+        </Modal>
+    );
+
+}
+
 const styles = StyleSheet.create({
 
     container: { 
@@ -631,8 +686,8 @@ const styles = StyleSheet.create({
         marginBottom: 20
     },
     button: {
-        height: 32,
-        width: "50%",
+        height: 40,
+        paddingHorizontal: "10%",
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#0E9608",
@@ -641,6 +696,7 @@ const styles = StyleSheet.create({
     buttonTitle: {
         color: "#FFFFFF",
         fontFamily: "Inter_700Bold",
+        fontSize: 15
     },
     productsContainer: {
         marginBottom: 23, 
@@ -731,6 +787,11 @@ const stylesModal = StyleSheet.create({
         textAlign: "center"
     },
 
+    optionTitle: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 16
+    },
+
     hint: {
         fontFamily: "Inter_400Regular",
         fontSize: 12,
@@ -776,6 +837,13 @@ const stylesModal = StyleSheet.create({
         fontSize: 15,
         textAlign: "center",
         color: "#FFFFFF"
-    }
+    },
+
+    confirmationButton: {
+        backgroundColor: "#0E9608",
+        paddingVertical: 10,
+        paddingHorizontal: 30,
+        borderRadius: 5
+    },
 
 });

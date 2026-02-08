@@ -1,10 +1,14 @@
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, StyleSheet, FlatList, ScrollView, Image } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { View, Text, StyleSheet, FlatList, ScrollView, Image, TouchableOpacity } from "react-native";
+import { useNavigation, useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
 import { PieChart } from "react-native-gifted-charts";
 import Entypo from '@expo/vector-icons/Entypo';
 import ProgressBar from "@/components/progress-bar";
+import { DrawerNavProps } from "../_layout";
+import { useEffect, useState } from "react";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { db } from "@/config/firebaseConfig";
 
 
 const goalData = [
@@ -68,9 +72,11 @@ const decimalStyle = new Intl.NumberFormat("pt-BR", { style: "currency", currenc
 
 export default function HomeScreen() {
     
-    const { colors } = useTheme();    
+    const { colors } = useTheme(); 
+    const navigation = useNavigation<DrawerNavProps>();
+    const [totalValueSales, setTotalValueSales] = useState(0);
 
-    const chartData = [
+    /*const chartData = [
         {
             value: goalData[0].value,            
             color: "#4A1212",
@@ -81,7 +87,40 @@ export default function HomeScreen() {
             color: "#FFFFFF",            
             textBackground: "meta"
         }
+    ];*/
+
+    const chartData = [
+        {
+            value: totalValueSales,
+            color: "#4A1212"
+        },
+        {
+            value: 1000 - totalValueSales,
+            color: "#FFFFFF",
+            textBackground: "Meta estabelecida"
+        },
     ];
+
+    useEffect(() => {
+
+        const unsub = onSnapshot(query(collection(db, "sales")), (querySnapshot) => {
+            if(querySnapshot.empty)
+                return;
+
+            const salesData = querySnapshot.docs;
+            let totalValue = 0;
+
+            salesData.forEach(e => {
+                const productsList : any[] = e.get("products");
+                productsList.forEach(p => {
+                    totalValue = totalValue + (p.amount * p.unitPrice);
+                });
+            });
+
+            setTotalValueSales(totalValue);
+        });
+
+    }, []);
 
     return(
 
@@ -111,12 +150,27 @@ export default function HomeScreen() {
                                 labelLineConfig={{ length: 30 }}
                                 tooltipDuration={ 1000 }                    
                                 />
-                            <Text style = { styles.chartTextBackground }>{ decimalStyle.format(goalData[0].value) }</Text>
+                            <Text style = { styles.chartTextBackground }>{ decimalStyle.format(totalValueSales) }</Text>
                         </View>                    
                         <Text style = { [styles.hint, { textAlign: "right", marginTop: 17 }] }>{"Gráfico do batimento\nde metas"}</Text>
                     </View>
 
-                    <View style = {{ width: "90%", marginTop: 24 }}>
+                    <View style = { styles.buttonContainer }>
+                        <TouchableOpacity
+                            onPress={ () => navigation.navigate("Sales") }
+                            style = { styles.button }
+                        >
+                            <Text style = { styles.buttonText }>Realizar Venda</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={ () => navigation.navigate("Stock") }
+                            style = { styles.button }
+                        >
+                            <Text style = { styles.buttonText }>Verificar Estoque</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/*<View style = {{ width: "90%", marginTop: 24 }}>
                         <Text style = {{ ...styles.hint, fontSize: 18, marginLeft: 23 }}>Vendas do dia</Text>
                         <FlatList                         
                             showsVerticalScrollIndicator = { false }                                                 
@@ -124,9 +178,9 @@ export default function HomeScreen() {
                             style = { styles.salesList }
                             renderItem={({ item }) => <Sale data = { item }/>}
                         />                                    
-                    </View>
+                    </View>*/}
 
-                    <View style = {{ width: "90%", marginTop: 24 }}>
+                    {<View style = {{ width: "90%", marginTop: 24 }}>
                         <Text style = {{ ...styles.hint, fontSize: 18, marginLeft: 23 }}>Situação do estoque</Text>
                         <FlatList
                             showsVerticalScrollIndicator = { false }
@@ -134,7 +188,7 @@ export default function HomeScreen() {
                             style = {{ marginTop: 12 }}
                             renderItem = { ({ item }) => <StockAlert data = { item }/> }
                         />                
-                    </View> 
+                    </View>}
                 </ScrollView>                               
             </SafeAreaView>
         </SafeAreaProvider>
@@ -198,7 +252,7 @@ const styles = StyleSheet.create({
         alignItems: "center", 
         justifyContent: "center", 
         height: "100%", 
-        marginVertical: 70 
+        
     },
 
     chartContainer: {
@@ -257,7 +311,24 @@ const styles = StyleSheet.create({
         borderRadius: 2, 
         marginLeft: 3, 
         marginRight: 6
-    }
-
+    },
+    buttonContainer: {
+        gap: 10, 
+        width: "100%", 
+        marginTop: 20,
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    button: {
+        backgroundColor: "#770E0E",
+        paddingVertical: 8,
+        width: "70%",
+        borderRadius: 5
+    },
+    buttonText: {
+        fontFamily: "Inter_700Bold",
+        color: "#FFFFFF",
+        textAlign: "center"
+    },
 });
 
