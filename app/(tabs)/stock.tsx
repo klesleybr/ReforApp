@@ -12,6 +12,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { MultiSelect } from "react-native-element-dropdown";
+import Confirmation from "@/components/confirmation";
 
 type Product = {
     id?: string,
@@ -90,6 +91,7 @@ export default function StockScreen() {
     const [upgradeAmount, setUpgradeAmount] = useState<Product | undefined>(undefined);
     const [products, setProducts] = useState<Product[] | undefined>(undefined);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [excludeItem, setExcludeItem] = useState<Product | undefined>(undefined);
     const { colors } = useTheme();
     
     let queryCategories : Category[] = [];
@@ -177,6 +179,16 @@ export default function StockScreen() {
                     onClose = { () => setVisibleModal(false) } 
                     categories={ mockedCategories }
                 /> 
+                <Confirmation 
+                    visible = { excludeItem ? true : false}
+                    title = "Confirme a ação"
+                    description = "A exclusão de um produto é uma ação não recomendada e irreversível. Deseja continuar mesmo assim?"
+                    onClose = { ()=> setExcludeItem(undefined) }
+                    onConfirmation={ () => {
+                        if(excludeItem) deleteProduct(excludeItem.id!);
+                    } } 
+                    onNegation={ () => setExcludeItem(undefined) }                
+                />
                 {
                     upgradeAmount !== undefined ? (
                         <AmountModal onClose={ () => setUpgradeAmount(undefined)} product = { upgradeAmount }></AmountModal>
@@ -228,7 +240,7 @@ export default function StockScreen() {
                                                     <Feather name="edit-2" size={24} color="black" onPress={() => null} />
                                                 </TouchableOpacity>
                                                 <TouchableOpacity style = {{ backgroundColor: "#6D0808", padding: 4, borderRadius: 4 }}>
-                                                    <FontAwesome6 name="trash" size={18} color="white" onPress = { () => deleteProduct(item.id!) } />
+                                                    <FontAwesome6 name="trash" size={18} color="white" onPress = { () => setExcludeItem(item) } />
                                                 </TouchableOpacity>
 
                                             </View>
