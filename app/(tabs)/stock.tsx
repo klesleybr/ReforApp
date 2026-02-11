@@ -186,17 +186,19 @@ export default function StockScreen() {
                             </View>                                                                                       
                             <FlatList
                                 showsVerticalScrollIndicator = { false }
-                                data = { products.filter(e => e.name.includes(searchProduct)) }                                    
+                                data = { products.filter(e => (e.name.toLocaleLowerCase()).includes(searchProduct.toLocaleLowerCase())) }                                    
                                 renderItem = { ({ item }) => {
                                     return(
                                         <TouchableOpacity style ={ styles.itemContainer } onPress={ () => setUpgradeAmount(item) }> 
                                             <View style = { styles.productInfo }>
                                                 <Image source = { selectImage(item.categories) } style = { styles.productImage } resizeMode = "cover"/>
                                                 <View>
-                                                        <Text style = { styles.productName } numberOfLines = {1}>{ item.name }</Text>                                                        
-                                                        <Text style = {{ fontFamily: "Inter_400Regular", marginVertical: 3 }}>
-                                                            <Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade: </Text>{ item.amount - item.sold }
-                                                        </Text>                                                            
+                                                        <View style = {{ width: "83%" }}>
+                                                            <Text style = { styles.productName } numberOfLines = {2}>{ item.name }</Text>                                                        
+                                                            <Text style = {{ fontFamily: "Inter_400Regular", marginVertical: 3 }}>
+                                                                <Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade: </Text>{ item.amount - item.sold }
+                                                            </Text>
+                                                        </View>                                                            
                                                         {
                                                             reposition(item.amount, item.sold) ? (
                                                                 <View style = { styles.repositionAdvice }>
@@ -746,7 +748,7 @@ const styles = StyleSheet.create({
     },
     productImage: {
         width: 65, 
-        height: 65,         
+        height: 75,         
         borderRadius: 2, 
         marginRight: 7 
     },
