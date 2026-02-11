@@ -25,7 +25,7 @@ export default function Confirmation({ visible, title, description, onClose, onC
                     <View style = { styles.background }>
                         <MaterialCommunityIcons name = "close-thick" onPress={ () => onClose() } color = "#6D0808" size = { 24 } style = { styles.closeIcon }/>
                         <Text style = { styles.title }>{ title }</Text>
-                        <Text style = { styles.hint }>{ description }</Text>
+                        <Text style = { [styles.hint, { marginBottom: !checkbox ? 30 : undefined }] }>{ description }</Text>
                         {
                             checkbox ? (
                                 <View style = { styles.chekboxContainer }>
@@ -100,13 +100,13 @@ const styles = StyleSheet.create({
         opacity: 0.5,
         fontFamily: "Inter_400Regular",
         fontSize: 12,
-        textAlign: "center",        
+        textAlign: "center",     
     },
     title: {
         fontFamily: "Inter_700Bold",
         fontSize: 22,
         textAlign: "center",
-        marginTop: 34,
+        marginTop: 25,
         marginBottom: 23
     },
     button: {

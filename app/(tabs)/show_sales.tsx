@@ -11,6 +11,8 @@ import { DrawerNavProps } from "../_layout";
 import { Dropdown } from "react-native-element-dropdown";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Confirmation from "@/components/confirmation";
+import { TextInput } from "react-native-gesture-handler";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export type SaleData = {
     id: string,
@@ -36,6 +38,7 @@ export default function ShowSalesScreen() {
     const [salesData, setSalesData] = useState<SaleData[] | undefined>(undefined);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [customerValue, setCustomerValue] = useState("");
     const decimalStyle = Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
     useEffect(() => {        
@@ -121,11 +124,21 @@ export default function ShowSalesScreen() {
                             </View>
                         ) : salesData.length > 0 ? (
                             <View style = {{ flex: 1, width: "90%" }}>
+                                <View style = { styles.searchContainer }>
+                                    <FontAwesome name = "search" size = { 15 } style = {{ opacity: 0.2 }}/>
+                                    <TextInput 
+                                        style = { styles.searchInput }
+                                        placeholder = "Pesquise por um cliente..."
+                                        numberOfLines = {1}    
+                                        value = { customerValue }
+                                        onChangeText = { value => setCustomerValue(value) }                                
+                                    />
+                                </View>
                                 <FlatList                                  
                                     showsVerticalScrollIndicator = { false }
-                                    style = {{ paddingVertical: 30, flex: 1 }}  
+                                    style = {{ flex: 1 }}                                      
                                     keyExtractor={ item => item.id }                    
-                                    data = { salesData }
+                                    data = { customerValue === "" ? salesData : salesData.filter(e => (e.customerName.toLocaleLowerCase()).includes(customerValue.toLocaleLowerCase())) }
                                     renderItem={ ({ item }) => {                            
                                             return(
                                                 <View style = { styles.itemContainer }>                                          
@@ -284,7 +297,7 @@ const styles = StyleSheet.create({
 
     container: {        
         alignItems: "center",
-        flex: 1
+        flex: 1,
     },
     loadingContainer: {
         flex: 1,        
@@ -296,6 +309,20 @@ const styles = StyleSheet.create({
         fontFamily: "Inter_400Regular",
         fontSize: 15,
         opacity: 0.5
+    },
+    searchContainer: {
+        flexDirection: "row",
+        marginVertical: 30,
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        height: 42,
+        borderRadius: 3,
+        paddingLeft: 13
+    },
+    searchInput: {
+        backgroundColor: "transparent",        
+        paddingHorizontal: 13,
+        fontFamily: "Inter_400Regular"
     },
     scrollViewContainer: {
         width: "90%",
