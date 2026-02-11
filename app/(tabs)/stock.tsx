@@ -13,6 +13,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { MultiSelect } from "react-native-element-dropdown";
 import Confirmation from "@/components/confirmation";
+import { ScrollView } from "react-native-gesture-handler";
 
 type Product = {
     id?: string,
@@ -45,51 +46,12 @@ type StockModalProps = {
     product?: Product,
 };
 
-const mockedCategories : Category[] = [
-    {
-        name: "Alimentos",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    {
-        name: "Bebidas",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    {
-        name: "Bolos",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    {
-        name: "Gelados",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    {
-        name: "Lanches",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    {
-        name: "Refrigerantes",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    {
-        name: "Sucos",
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-    },
-    
-]
-
-
 export default function StockScreen() {
 
     const [visibleModal, setVisibleModal] = useState(false);
     const [upgradeAmount, setUpgradeAmount] = useState<Product | undefined>(undefined);
     const [products, setProducts] = useState<Product[] | undefined>(undefined);
+    const [searchProduct, setSearchProduct] = useState<string>("");
     const [categories, setCategories] = useState<Category[]>([]);
     const [excludeItem, setExcludeItem] = useState<Product | undefined>(undefined);
     const { colors } = useTheme();
@@ -110,8 +72,8 @@ export default function StockScreen() {
             if(querySnapshot.empty)
                 setProducts([]);
 
-            const productsData = querySnapshot.docs;
-            setProducts(productsData.map(e => {
+            const productsData = querySnapshot.docs;            
+            setProducts(productsData.map(e => {                
                 return {
                     id: e.id,
                     name: e.get("name"),
@@ -128,6 +90,7 @@ export default function StockScreen() {
             }).sort(function(a, b) {
                 return a.name.localeCompare(b.name);
             }));
+            
         });
 
         const categoriesUnsub = onSnapshot(query(collection(db, "categories")), (querySnapshot) => {
@@ -147,7 +110,7 @@ export default function StockScreen() {
                 }
             }).sort((a,b) => a.name.localeCompare(b));                               
             setCategories(queryCategories);                
-        });    
+        });            
 
         return () => {unsub(); categoriesUnsub();};
 
@@ -191,9 +154,10 @@ export default function StockScreen() {
                 />
                 {
                     upgradeAmount !== undefined ? (
-                        <AmountModal onClose={ () => setUpgradeAmount(undefined)} product = { upgradeAmount }></AmountModal>
+                        <AmountModal onClose={ () => setUpgradeAmount(undefined)} product = { upgradeAmount } categories={[]}></AmountModal>
                     ) : null
-                }                                      
+                }                
+
                 {
                     products === undefined ? (
                         <View style = { styles.loadingContainer }>
@@ -209,11 +173,20 @@ export default function StockScreen() {
                             </TouchableOpacity>
                         </View>
                     ) : (
-                        <View style = { styles.productsContainer }>                                
-                            <Text style = { styles.productsTitle }>Todos os Produtos</Text>
+                        <View style = { styles.productsContainer }>
+                            <View style = { styles.searchContainer }>
+                                <FontAwesome name = "search" size = { 15 } style = {{ opacity: 0.2 }}/>
+                                <TextInput 
+                                    style = { styles.searchInput }
+                                    placeholder = "Pesquise por um produto..."
+                                    numberOfLines = {1}    
+                                    value = { searchProduct }
+                                    onChangeText = { value => setSearchProduct(value) }                                
+                                />
+                            </View>                                                                                       
                             <FlatList
                                 showsVerticalScrollIndicator = { false }
-                                data = { products }                                    
+                                data = { products.filter(e => e.name.includes(searchProduct)) }                                    
                                 renderItem = { ({ item }) => {
                                     return(
                                         <TouchableOpacity style ={ styles.itemContainer } onPress={ () => setUpgradeAmount(item) }> 
@@ -695,6 +668,20 @@ const styles = StyleSheet.create({
         fontFamily: "Inter_400Regular",
         fontSize: 15,
         opacity: 0.5
+    },
+    searchContainer: {
+        flexDirection: "row",
+        marginVertical: 30,
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        height: 42,
+        borderRadius: 3,
+        paddingLeft: 13
+    },
+    searchInput: {
+        backgroundColor: "transparent",        
+        paddingHorizontal: 13,
+        fontFamily: "Inter_400Regular"
     },
     emptyTitle: {
         fontFamily: "Inter_700Bold",
