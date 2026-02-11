@@ -1,5 +1,5 @@
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, StyleSheet, FlatList, ScrollView, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, FlatList, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
 import { useNavigation, useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
 import { PieChart } from "react-native-gifted-charts";
@@ -7,8 +7,11 @@ import Entypo from '@expo/vector-icons/Entypo';
 import ProgressBar from "@/components/progress-bar";
 import { DrawerNavProps } from "../_layout";
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { TextInput } from "react-native-gesture-handler";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 
 const goalData = [
@@ -75,6 +78,8 @@ export default function HomeScreen() {
     const { colors } = useTheme(); 
     const navigation = useNavigation<DrawerNavProps>();
     const [totalValueSales, setTotalValueSales] = useState(0);
+    const [goal, setGoal] = useState<{ id: string, value: number } | undefined>(undefined);
+    const [showGoalModal, setShowGoalModal] = useState(false);
 
     /*const chartData = [
         {
@@ -92,18 +97,20 @@ export default function HomeScreen() {
     const chartData = [
         {
             value: totalValueSales,
-            color: "#4A1212"
+            color: "#4A1212",
+            text: (totalValueSales / (goal?.value || 0) * 100).toFixed(2) + " %"
         },
         {
-            value: 1000 - totalValueSales,
+            value: (goal?.value || 0) - totalValueSales,
             color: "#FFFFFF",
-            textBackground: "Meta estabelecida"
+            textBackground: "Meta estabelecida",
+            text: ((goal?.value || 0) - totalValueSales).toLocaleString("pt-BR", { style: "currency", currency: "BRL"})
         },
     ];
 
     useEffect(() => {
 
-        const unsub = onSnapshot(query(collection(db, "sales")), (querySnapshot) => {
+        const unsubSum = onSnapshot(query(collection(db, "sales")), (querySnapshot) => {
             if(querySnapshot.empty)
                 return;
 
@@ -120,6 +127,17 @@ export default function HomeScreen() {
             setTotalValueSales(totalValue);
         });
 
+        const unsubGoal = onSnapshot(query(collection(db, "goals"), orderBy("createdAt", "desc"), limit(1)), (querySnapshot) => {
+            if(querySnapshot.empty) {
+                setGoal(undefined);
+                return;
+            }
+            const goalData = querySnapshot.docs[0];
+            setGoal({ id: goalData.id, value: goalData.get("value") });
+        });
+
+        return () => { unsubSum(); unsubGoal() };
+
     }, []);
 
     return(
@@ -127,13 +145,16 @@ export default function HomeScreen() {
         <SafeAreaProvider>
             <SafeAreaView style = { [styles.container, { backgroundColor: colors.background }] }>
                 <Header iconType="menu"/>
-
+                <GoalModal visible = { showGoalModal } onClose={ () => setShowGoalModal(false) } goalData = { goal }></GoalModal>
                 <ScrollView 
                     showsVerticalScrollIndicator = { false } 
                     contentContainerStyle = { styles.scrollViewContainer } 
                     style = {{ width: "100%" }}
                 >
                     <View>
+                        <TouchableOpacity style = { styles.goal } onPress={ () => setShowGoalModal(true) }>
+                            <FontAwesome name = "usd" color = "#FFFFFF" size = { 20 }/>
+                        </TouchableOpacity>
                         <View style = { styles.chartContainer }>
                             <PieChart 
                                 data = { chartData }
@@ -197,6 +218,48 @@ export default function HomeScreen() {
 
 }
 
+function GoalModal({ visible = false, onClose, goalData } : { visible: boolean, onClose: () => void, goalData : any }) {
+    const [goal, setGoal] = useState("0,00");
+    const update = async () => {
+        if(isNaN(Number(goal.replace(",", "."))))
+            return;
+
+        const goalRef = doc(db, "goals", goalData.id);
+        await updateDoc(goalRef, {
+            value: Number(goal.replace(",", ".")),
+            updatedAt: serverTimestamp()
+        });
+
+        onClose();
+        setGoal("0,00");
+    };
+
+    return(
+        <Modal transparent = { true } visible = { visible }>
+            <View style = { goalModalStyles.background }>
+                <View style = { goalModalStyles.container }>
+                    <MaterialCommunityIcons name = "close-thick" onPress={ () => { onClose(); setGoal("0,00") } } color = "#6D0808" size = { 24 } style = { goalModalStyles.closeIcon } />
+                    <Text style = { goalModalStyles.title }>Defina uma meta</Text>
+                    <Text style = { goalModalStyles.hint }>Informe o valor que se deseja arrecadar no evento deste ano.</Text>
+                    <View style = { goalModalStyles.inputContainer }>
+                        <Text style = {{ fontFamily: "Inter_400Regular" }}>R$</Text>
+                        <TextInput 
+                            style = { goalModalStyles.textInput } 
+                            inputMode="decimal"
+                            value = { goal }
+                            onChangeText = { (value) => setGoal(value) }
+                        />
+                    </View>
+                    <TouchableOpacity style = { goalModalStyles.button } onPress={ () => update() }>
+                        <Text style = { goalModalStyles.buttonText }>Salvar</Text>
+                    </TouchableOpacity>                    
+                </View>
+            </View>
+        </Modal>
+    );
+
+}
+
 function Sale({ data } : any) {
 
     return(
@@ -253,6 +316,18 @@ const styles = StyleSheet.create({
         justifyContent: "center", 
         height: "100%", 
         
+    },
+
+    goal: {
+        backgroundColor: "#0E9608",
+        width: 30,
+        height: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 50,
+        position: "absolute",
+        right: 0,
+        zIndex: 1
     },
 
     chartContainer: {
@@ -332,3 +407,62 @@ const styles = StyleSheet.create({
     },
 });
 
+const goalModalStyles = StyleSheet.create({
+    background: {
+        flex: 1, 
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    container: {
+        backgroundColor: "#FFFFFF",
+        width: "90%",
+        paddingHorizontal: 30,
+        paddingVertical: 50,
+        alignItems: "center"
+    },
+    closeIcon: {
+        position: "absolute",
+        top: 16,
+        right: 16,
+        zIndex: 1
+    },
+    title: {
+        fontFamily: "Inter_700Bold",
+        fontSize: 22,
+        textAlign: "center"
+    },
+    hint: {
+        fontFamily: "Inter_400Regular",
+        fontSize: 12,
+        opacity: 0.5,
+        textAlign: "center",
+        marginVertical: 20
+    },
+    inputContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#E9E9E9",
+        borderRadius: 3,
+        paddingHorizontal: 13,
+        width: "50%"
+    },
+    textInput: {
+        fontFamily: "Inter_400Regular",
+        width: "100%",
+        height: 42
+    },
+    button: {
+        backgroundColor: "#0E9608",
+        width: "50%",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingVertical: 8,
+        borderRadius: 5,
+        marginTop: 25
+    },
+    buttonText: {
+        color: "#FFFFFF",
+        fontFamily: "Inter_700Bold",
+    },
+});
