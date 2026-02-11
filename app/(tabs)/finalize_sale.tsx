@@ -9,7 +9,7 @@ import Success from "@/assets/images/success.svg";
 import { StackNavigatorProps } from "../_layout";
 import type { ProductSale } from "./sales";
 import { db } from "@/config/firebaseConfig";
-import { collection, addDoc, doc, updateDoc, increment, Timestamp  } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, increment, Timestamp, serverTimestamp  } from "firebase/firestore";
 
 export default function FinalizeSaleScreen({ navigation, route } : StackNavigatorProps) {
     
@@ -48,8 +48,8 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                 customerName,
                 paymentMethod,
                 isPaid,
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now()
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             });
 
             selectedProducts.forEach((e : ProductSale) => {

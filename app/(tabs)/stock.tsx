@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, Image, TextI
 import { useEffect, useState } from "react";
 import { useTheme } from "@react-navigation/native";
 import Header from "@/components/header";
-import { doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot, updateDoc, increment } from "firebase/firestore";
+import { doc, getDoc, addDoc, getDocs, collection, Timestamp, deleteDoc, query, onSnapshot, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AddButton from "@/components/add-button";
@@ -39,7 +39,7 @@ type Category = {
 type StockModalProps = {
     onSubmit?: () => void;
     onClose: () => void;
-    categories?: Category[],
+    categories: Category[],
     productData?: Product,
     isVisible?: boolean,
     product?: Product,
@@ -130,7 +130,7 @@ export default function StockScreen() {
             }));
         });
 
-        /*const categoriesUnsub = onSnapshot(query(collection(db, "categories")), (querySnapshot) => {
+        const categoriesUnsub = onSnapshot(query(collection(db, "categories")), (querySnapshot) => {
             if(querySnapshot.empty) {
                 setCategories([]);
                 return;
@@ -147,9 +147,9 @@ export default function StockScreen() {
                 }
             }).sort((a,b) => a.name.localeCompare(b));                               
             setCategories(queryCategories);                
-        });  */      
+        });    
 
-        return () => {unsub()};
+        return () => {unsub(); categoriesUnsub();};
 
     }, []);    
 
@@ -177,7 +177,7 @@ export default function StockScreen() {
                     isVisible = { visibleModal } 
                     onSubmit = { () => setVisibleModal(false) } 
                     onClose = { () => setVisibleModal(false) } 
-                    categories={ mockedCategories }
+                    categories={ categories }
                 /> 
                 <Confirmation 
                     visible = { excludeItem ? true : false}
@@ -264,9 +264,9 @@ export default function StockScreen() {
 
 function StockModal({ onClose, categories, productData, isVisible = false } : StockModalProps) {
 
-    const [categoriesList, setCategoriesList] = useState<Category[] | undefined>(categories);
+    const [categoriesList, setCategoriesList] = useState<Category[] | undefined>(undefined);
     const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
-    const [categoryName, setCategoryName] = useState<string | undefined>(undefined);
+    const [categoryName, setCategoryName] = useState<string>("");
     const [categoryDescription, setCategoryDescription] = useState<string | undefined>(undefined);
     const [createCategory, setCreateCategory] = useState<boolean>(false);
     const [priceString, setPriceString] = useState<string>("0");
@@ -324,8 +324,8 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                 unitCost: product.unitCost,
                 sold: 0,
                 ...(product.description !== "" ? { description: product.description } : {}),
-                createdAt: Timestamp.now(), 
-                updatedAt: Timestamp.now() 
+                createdAt: serverTimestamp(), 
+                updatedAt: serverTimestamp() 
             });
             onClose(); 
             setSelectedCategories([]);
@@ -341,13 +341,12 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
         try {            
             await addDoc(collection(db, "categories"), { 
                 name: categoryName, 
-                ...(categoryDescription !== "" ? { description: categoryDescription } : {}),
-                createdAt: Timestamp.now(), 
-                updatedAt: Timestamp.now() 
+                ...(categoryDescription !== undefined && categoryDescription !== "" ? { description: categoryDescription } : {}),
+                createdAt: serverTimestamp(), 
+                updatedAt: serverTimestamp() 
             });            
             setCategoryName("");
-            if(categoryDescription !== "")
-                setCategoryDescription("");
+            setCategoryDescription(undefined);
         } catch(e) {
             console.log("Erro ao adicionar categoria:", e);
         }
@@ -363,11 +362,11 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                     
                     <View style = { stylesModal.textInputContainer }>
                         <View style = {{ gap: 8, width: "70%" }}>
-                            <Text style = { stylesModal.titleTextInput }>Nome</Text>
+                            <Text style = { stylesModal.titleTextInput }>Nome<Text style = { stylesModal.required }>*</Text></Text>
                             <TextInput style = { stylesModal.textInput } value = { product.name } onChangeText = { (value) => setProduct({ ...product, name: value }) } />
                         </View>                    
                         <View style = {{ gap: 8, width: "30%" }}>
-                            <Text style = { stylesModal.titleTextInput }>Quantidade</Text>
+                            <Text style = { stylesModal.titleTextInput }>Quantidade<Text style = { stylesModal.required }>*</Text></Text>
                             <TextInput 
                                 style = { stylesModal.textInput } 
                                 value = { product.amount.toString() } 
@@ -383,7 +382,7 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
 
                     <View style = {{ ... stylesModal.textInputContainer, marginVertical: 10 }}>
                         <View style = {{ gap: 8, width: "50%" }}>
-                            <Text style = { stylesModal.titleTextInput }>Custo Unitário</Text>
+                            <Text style = { stylesModal.titleTextInput }>Custo Unitário<Text style = { stylesModal.required }>*</Text></Text>
                             <TextInput 
                                 style = { stylesModal.textInput } 
                                 value = { costString }
@@ -392,7 +391,7 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                             />
                         </View>                     
                         <View style = {{ gap: 8, width: "50%" }}>
-                            <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Preço Unitário</Text>
+                            <Text style = {{ fontFamily: "Inter_700Bold", fontSize: 10, marginLeft: 15 }}>Preço Unitário<Text style = { stylesModal.required }>*</Text></Text>
                             <TextInput 
                                 style = {{ ...stylesModal.textInput }}
                                 value = { priceString }
@@ -403,19 +402,31 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                     </View>
 
                     {
-                        categoriesList !== undefined ? (
-                            <View style = {{ width: "90%", marginVertical: 10,   justifyContent: "center" }}>                            
+                        categories.length > 0 ? (
+                            <View style = {{ width: "90%", marginVertical: 20, justifyContent: "center" }}>                            
                                 <MultiSelect
-                                    data = { categoriesList }
+                                    data = { categories.sort((a, b) => a.name.localeCompare(b.name)) || [] }
                                     labelField = "name"
                                     valueField = "name"
                                     onChange={ (value) => setSelectedCategories(value) }
                                     placeholder = "Selecione uma ou mais categorias"                                                                
-                                    value = { selectedCategories }                                                             
-                                />
-                                
+                                    value = { selectedCategories }    
+                                    renderItem={ (item) => {
+                                        return(
+                                            <View style = {{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: 0.2, borderBottomColor: "rgba(0, 0, 0, 0.3)"}}>
+                                                <Text>{item.name}</Text>
+                                                <TouchableOpacity onPress={ async () => await deleteDoc(doc(db, "categories", item.id)) }>
+                                                    <MaterialCommunityIcons name="close-thick" size = { 15 } color = "#6D0808"></MaterialCommunityIcons>
+                                                </TouchableOpacity>
+                                                
+                                            </View>                                            
+                                        )
+                                    }}                                                         
+                                />                                
                             </View>                        
-                        ) : null
+                        ) : (
+                            <Text style = {{ fontFamily: "Inter_400Regular", marginVertical: 20 }}>Nenhuma categoria foi criada.</Text>
+                        )
                     }
 
                     <View style = {{ width: "90%", marginBottom: 30, }}>
@@ -434,7 +445,7 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                                             onChangeText = { (value) => setCategoryName(value) }
                                         />
                                         <TextInput 
-                                            placeholder="Descrição da categoria" 
+                                            placeholder="Descrição da categoria (opcional)" 
                                             style = {{ ...stylesModal.textInput, backgroundColor: "#FFFFFF", borderWidth: 1}}
                                             placeholderTextColor = { "rgba(0, 0, 0, 0.5)" }
                                             value = { categoryDescription }
@@ -827,9 +838,13 @@ const stylesModal = StyleSheet.create({
         marginLeft: 15
     },
 
+    required: {
+        color: "#6D0808",
+    },
+
     textInput: {
         backgroundColor: "#E9E9E9", 
-        height: 35, 
+        height: 42, 
         borderRadius: 3, 
         paddingHorizontal: 13
     },
