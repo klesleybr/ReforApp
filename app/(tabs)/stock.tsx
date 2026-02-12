@@ -192,13 +192,11 @@ export default function StockScreen() {
                                         <TouchableOpacity style ={ styles.itemContainer } onPress={ () => setUpgradeAmount(item) }> 
                                             <View style = { styles.productInfo }>
                                                 <Image source = { selectImage(item.categories) } style = { styles.productImage } resizeMode = "cover"/>
-                                                <View>
-                                                        <View style = {{ width: "83%" }}>
-                                                            <Text style = { styles.productName } numberOfLines = {2}>{ item.name }</Text>                                                        
-                                                            <Text style = {{ fontFamily: "Inter_400Regular", marginVertical: 3 }}>
-                                                                <Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade: </Text>{ item.amount - item.sold }
-                                                            </Text>
-                                                        </View>                                                            
+                                                <View style = {{ width: "70%"}}>
+                                                        <Text style = { styles.productName } numberOfLines = {2}>{ item.name }</Text>                                                        
+                                                        <Text style = {{ fontFamily: "Inter_400Regular", marginVertical: 3 }}>
+                                                            <Text style = {{ fontFamily: "Inter_700Bold"}}>Quantidade: </Text>{ item.amount - item.sold }
+                                                        </Text>                                                           
                                                         {
                                                             reposition(item.amount, item.sold) ? (
                                                                 <View style = { styles.repositionAdvice }>
