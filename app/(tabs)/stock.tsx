@@ -843,14 +843,14 @@ const stylesModal = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 5,
-        marginTop: 25
+        marginTop: 25,
     },
 
     buttonText: {
         fontFamily: "Inter_700Bold",
         fontSize: 15,
         textAlign: "center",
-        color: "#FFFFFF"
+        color: "#FFFFFF",        
     },
 
     confirmationButton: {

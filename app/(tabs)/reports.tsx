@@ -52,7 +52,7 @@ export default function ReportScreen() {
                 <View style = { styles.container }>
                     
                     <Text style = { styles.hint }>
-                        Preencha os campos de data e pressione "Buscar" para consultar faturamento por período. <Text style = {{ fontFamily: "Inter_700Bold"}}>Caso algum dos campos
+                        Preencha os campos de data e pressione "Consultar" para consultar faturamento por período. <Text style = {{ fontFamily: "Inter_700Bold"}}>Caso algum dos campos
                         não seja preenchido, retorna o faturamento de hoje.</Text>
                     </Text>
 
