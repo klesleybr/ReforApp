@@ -26,6 +26,166 @@ export type ProductSale = {
 
 }
 
+const mock : ProductSale[] = [
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco", "Álcool"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco", "Álcool"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    {
+        product: {
+            id: "ddjsdkwd",
+            name: "Mockado",
+            unitPrice: 20,
+            categories: ["Alimento", "Bebida", "Suco"],
+            availableAmount: 25,
+            status: true
+        },
+        amount: 0,
+        partialTotal: 0
+    },
+    
+]
+
 export default function SalesScreen() {
 
     const navigation = useNavigation<DrawerNavProps>();
@@ -139,7 +299,7 @@ export default function SalesScreen() {
                             <Text style = { styles.loadingText }>Carregando dados...</Text>
                         </View>
                     ) : products.length > 0 ? (
-                        <ScrollView style = { styles.scrollContainer } contentContainerStyle = { styles.scrollContentContainer } showsVerticalScrollIndicator = { false }>
+                        <View style = { styles.scrollContainer } >
                             <Text style = { styles.hint }>Selecione os produtos que desejas adicionar à venda. Basta indicar a quantidade desejada.</Text>
                             {
                                 categoriesByProducts === undefined || categoriesByProducts.length === 0 ? (
@@ -200,7 +360,7 @@ export default function SalesScreen() {
                             <TouchableOpacity style = { styles.nextButton } onPress={ () => toDetails() }>
                                 <Text style = { styles.nextButtonTitle }>Avançar</Text>
                             </TouchableOpacity>
-                        </ScrollView>
+                        </View>
                     ) : (
                         <View style = {{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: "9%" }}>
                             <View style = {{ gap: 10, marginBottom: 25 }}>
@@ -247,14 +407,11 @@ const styles = StyleSheet.create({
         opacity: 0.5
     },
     scrollContainer: {
+        flex: 1,
         width: "90%",
         marginTop: 0,
-        marginBottom: 20
-    },
-    scrollContentContainer: {
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%"
+        marginBottom: 20,
+        alignItems: "center"
     },
     hint: {
         opacity: 0.5,
@@ -333,7 +490,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#0E9608",
         width: "77%",
         borderRadius: 5,
-        marginTop: 40,
+        marginTop: 25,
     },
     nextButtonTitle: {
         fontFamily: "Inter_700Bold",
