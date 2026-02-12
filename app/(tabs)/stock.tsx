@@ -289,7 +289,7 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
     const addProduct = async () => {
         try {                        
             const add = await addDoc(collection(db, "products"), { 
-                name: product.name,
+                name: product.name.trim(),
                 amount: product.amount,
                 status: product.status,
                 ...(selectedCategories.length > 0 ? { categories: selectedCategories } : {}),
@@ -313,8 +313,8 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
     const addCategory = async () => {
         try {            
             await addDoc(collection(db, "categories"), { 
-                name: categoryName, 
-                ...(categoryDescription !== undefined && categoryDescription !== "" ? { description: categoryDescription } : {}),
+                name: categoryName.trim(), 
+                ...(categoryDescription !== undefined && categoryDescription !== "" ? { description: categoryDescription.trim() } : {}),
                 createdAt: serverTimestamp(), 
                 updatedAt: serverTimestamp() 
             });            
@@ -475,7 +475,7 @@ function AmountModal({ onClose, product } :StockModalProps) {
         const docRef = doc(db, "products", product.id);
         await updateDoc(docRef, {
             amount: increment(Number(value)),
-            updatedAt: Timestamp.now()
+            updatedAt: serverTimestamp()
         });
         setUpdating(false);
     };
@@ -488,7 +488,7 @@ function AmountModal({ onClose, product } :StockModalProps) {
         await updateDoc(docRef, {
             amount: Number(value),
             sold: 0,
-            updatedAt: Timestamp.now()
+            updatedAt: serverTimestamp()
         });
         setUpdating(false);
     };
@@ -499,7 +499,7 @@ function AmountModal({ onClose, product } :StockModalProps) {
         const docRef = doc(db, "products", product.id);
         await updateDoc(docRef, {
             status: !(product.status),
-            updatedAt: Timestamp.now()
+            updatedAt: serverTimestamp()
         });
     }
 

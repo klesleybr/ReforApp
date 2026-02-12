@@ -1,6 +1,6 @@
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { View, Text, ScrollView, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from "react-native";
-import { getDoc, increment, onSnapshot, query, Timestamp, updateDoc } from "firebase/firestore";
+import { getDoc, increment, onSnapshot, query, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore";
 import Header from "@/components/header";
 import { useEffect, useState } from "react";
 import Entypo from '@expo/vector-icons/Entypo';
@@ -109,7 +109,7 @@ export default function ShowSalesScreen() {
                                 if(sold !== 0) {
                                     await updateDoc(productRef, {
                                         sold: sold - e.amount <= 0 ? 0 : sold - e.amount,
-                                        updatedAt: Timestamp.now()
+                                        updatedAt: serverTimestamp()
                                     });
                                 }                                                                
                             });
@@ -251,7 +251,7 @@ function PaymentModal({ id, visible, onClose } : { id?: string, visible : boolea
         await updateDoc(docRef, {
             paymentMethod: paymentMethod,
             isPaid: true,
-            updatedAt: Timestamp.now()
+            updatedAt: serverTimestamp()
         });
     };
 

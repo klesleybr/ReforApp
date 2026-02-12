@@ -7,6 +7,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
 import { MaskedTextInput} from "react-native-mask-text";
+import { Checkbox } from "@futurejj/react-native-checkbox";
 
 export default function ReportScreen() {
 
@@ -14,8 +15,34 @@ export default function ReportScreen() {
     const [initialDate, setInitialDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [value, setValue] = useState<number>(0);
-    const [showDateTimePicker, setShowDateTimePicker] = useState(false);
+    const [isPaidOnly, setIsPaidOnly] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [salesData, setSalesData] = useState<any[] | undefined>(undefined);
+
+    const setTotal = () => {
+
+        let total = 0;
+
+        salesData?.forEach(doc => {
+            console.log("Documento da vez:", doc);
+            if(isPaidOnly && !doc.get("isPaid"))
+                return;
+            const products = doc.get("products") as any[];
+            products.forEach(p => { 
+                console.log("Produto da vez:", p);
+                total = total + (p.amount * p.unitPrice) 
+            })
+        });            
+        setValue(total);
+
+    }
+
+    useEffect(() => {
+
+        setTotal();
+
+    }, [isPaidOnly, salesData]);
+
 
     return(
         <SafeAreaProvider>
@@ -41,11 +68,9 @@ export default function ReportScreen() {
                             )
                         }
                     </View>
-
-                    
                     
                     <View style = { styles.dateContainer }>
-                        <View style = {{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                        <View style = {{ flexDirection: "row", gap: 10, alignItems: "center", justifyContent: "center" }}>
                             <Text style = { styles.label }>Data Inicial:</Text>
                             <View style = { styles.textInputContainer }>
                                 <Feather name = "calendar" size = { 20 } style = {{ opacity: 0.5 }}/>                   
@@ -58,11 +83,12 @@ export default function ReportScreen() {
                                     onChangeText={ (text) => setInitialDate(text) } 
                                     placeholder="DD/MM/AAAA"
                                     style = { styles.textInput }
+                                    textAlign="center"
                                 />
                             </View>  
                         </View>
 
-                        <View style = {{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                        <View style = {{ flexDirection: "row", gap: 10, alignItems: "center", justifyContent: "center" }}>
                             <Text style = { styles.label }>Data Final:</Text>
                             <View style = { styles.textInputContainer }>
                                 <Feather name = "calendar" size = { 20 } style = {{ opacity: 0.5 }}/>
@@ -75,55 +101,59 @@ export default function ReportScreen() {
                                     onChangeText={ (text) => setEndDate(text)} 
                                     placeholder="DD/MM/AAAA"
                                     style = { styles.textInput }
+                                    textAlign="center"
                                 />
                             </View>
                         </View>
-                    </View>                        
+                    </View>               
+
+                    <View style = { styles.checkboxContainer }>
+                        <Checkbox status = { isPaidOnly ? "checked" : "unchecked" } onPress={ () => setIsPaidOnly(prev => !prev) } color="#6D0808" style = { styles.checkbox } />
+                        <Text style = { styles.checkboxLabel }>Considerar apenas as vendas que já foram pagas.</Text>
+                    </View>
 
                     <TouchableOpacity
                         onPress={ async () => {
                             setIsLoading(true);
-                            if(initialDate === "" || endDate === "") {
-                                const todayInit = new Date(Date.now());
-                                todayInit.setUTCHours(0);
-                                todayInit.setUTCMinutes(0);
-                                todayInit.setUTCSeconds(0);
-                                todayInit.setUTCMilliseconds(0)
-
-                                const todayEnd = new Date(Date.now());
-
-                                console.log(todayInit)
-                                const q = query(collection(db, "sales"), where("createdAt", ">=", todayInit), where("createdAt", "<=", todayEnd))
-                                const querySnapshot = await getDocs(q);                                
-                                setIsLoading(false);
-                                return;
-                            }
-
-
-                            const initialDateSplit = initialDate.split("/");
-                            const endDateSplit = endDate.split("/");
-
-                            const initialDateFormat = new Date(parseInt(initialDateSplit[2]), parseInt(initialDateSplit[1]) - 1, parseInt(initialDateSplit[0]));                        
-                            const endDateFormat = new Date(parseInt(endDateSplit[2]), parseInt(endDateSplit[1]) - 1, parseInt(endDateSplit[0]));
-                            endDateFormat.setUTCHours(23);
-                            endDateFormat.setUTCMinutes(59);
-                            endDateFormat.setUTCSeconds(59);
-                            endDateFormat.setUTCMilliseconds(999);
-
-                            const q = query(collection(db, "sales"), where("createdAt", ">=", initialDateFormat),
-                                where("createdAt", "<=", endDateFormat));
-                            const querySnapshot = await getDocs(q);
-
+                            let init : Date;
+                            let end : Date;
                             let total = 0;
-                            querySnapshot.forEach(doc => {
-                                const products = doc.get("products") as any[];
-                                products.forEach(p => { total = total + (p.amount * p.unitPrice) })
-                            });  
 
-                            setValue(total);
+                            if(initialDate === "" || endDate === "") {
+                                init = new Date(Date.now());
+                                init.setUTCHours(0);
+                                init.setUTCMinutes(0);
+                                init.setUTCSeconds(0);
+                                init.setUTCMilliseconds(0);
+
+                                end = new Date(Date.now());
+                                end.setUTCHours(23);
+                                end.setUTCMinutes(59);
+                                end.setUTCSeconds(59);
+                                end.setUTCMilliseconds(999);                                                                                                                         
+                            } else {
+                                const initialDateSplit = initialDate.split("/");
+                                const endDateSplit = endDate.split("/");
+
+                                init = new Date(parseInt(initialDateSplit[2]), parseInt(initialDateSplit[1]) - 1, parseInt(initialDateSplit[0]));                        
+                                end = new Date(parseInt(endDateSplit[2]), parseInt(endDateSplit[1]) - 1, parseInt(endDateSplit[0]));
+                                end.setUTCHours(23);
+                                end.setUTCMinutes(59);
+                                end.setUTCSeconds(59);
+                                end.setUTCMilliseconds(999);                                
+                            }
+                            console.log("Início:", init);
+                            console.log("Final:", end);
+                            const q = query(collection(db, "sales"), where("createdAt", ">=", init),
+                                where("createdAt", "<=", end));
+                            const querySnapshot = await getDocs(q); 
+                            const data = querySnapshot.docs;
+                            console.log("Dados do querySnapshot:", data)
+                            setSalesData(data);                           
+                            setTotal();
                             setIsLoading(false);
                         }}
-                        style = { styles.buton }
+                        style = { styles.button }
                     >
                         <Text style = { styles.buttonText }>Consultar</Text>
                     </TouchableOpacity>
@@ -152,8 +182,7 @@ const styles = StyleSheet.create({
     dateContainer: {
         width: "100%",
         alignItems: "center",
-        gap: 10,
-        marginBottom: 30
+        gap: 10,        
     },
     label: {
         fontFamily: "Inter_700Bold",
@@ -164,22 +193,37 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        width: "52%",
+        justifyContent: "space-between",
+        paddingHorizontal: "8%",
+        width: "70%",
         borderRadius: 5,
-        gap: 15
+        
     },
     textInput: {
         fontFamily: "Inter_400Regular",
-        width: "60%",
-        height: 42
+        width: "70%",
+        height: 42,
+        justifyContent: "center"
     },
     value: {
         fontFamily: "Inter_700Bold",
         color: "#0A6D06",        
         fontSize: 40
     },
-    buton: {
+    checkboxContainer: {
+        flexDirection: "row",
+        alignItems: "baseline",
+        justifyContent: "center",
+        width: "80%",
+        marginVertical: 30
+    },
+    checkbox: {
+        top: 4
+    },
+    checkboxLabel: {
+        fontFamily: "Inter_400Regular"
+    },
+    button: {
         backgroundColor: "#6D0808",
         paddingVertical: 8,
         paddingHorizontal: "3%",

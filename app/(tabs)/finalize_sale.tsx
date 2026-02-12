@@ -43,7 +43,7 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
                         amount: e.amount,                        
                     }
                 }),                
-                customerName,
+                customerName: customerName.trim(),
                 paymentMethod,
                 isPaid,
                 createdAt: serverTimestamp(),
