@@ -275,6 +275,7 @@ export default function SalesScreen() {
                                         const isSelected = selectedCategory === item;
                                         return (
                                             <TouchableOpacity 
+                                                key = { item }
                                                 onPress = { () => selectedCategory === item ? setSelectedCategory(undefined) : setSelectedCategory(item) }
                                                 style = {{ backgroundColor: isSelected ? "rgba(109, 8, 8, 0.8)" : undefined, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 50 }}
                                             >
