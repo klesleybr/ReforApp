@@ -31,6 +31,8 @@ export default function SalesScreen() {
     const navigation = useNavigation<DrawerNavProps>();
     const { colors } = useTheme();
     const [products, setProducts] = useState<ProductSale[] | undefined>(undefined);
+    const [categoriesByProducts, setCategoriesByProducts] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
 
     const orderFunction = (list : ProductSale[]) => {        
        return list.sort(function(a, b) {
@@ -41,7 +43,20 @@ export default function SalesScreen() {
     const initialQuery = async () => {
         const querySnapshot = await getDocs(collection(db, "products"));
         const storeProducts : ProductSale[] = [];
+        const categoriesPrev : string[] = [];
+        setCategoriesByProducts([]);
         querySnapshot.forEach((e) => {            
+            if(e.get("categories") && e.get("categories").length > 0) {
+                const c = e.get("categories") as [];                
+                c.forEach(e => {
+                    if(!categoriesPrev.includes(e))
+                        categoriesPrev.push(e);                        
+                });
+            } else {
+                if(!categoriesPrev.includes("Outros"))
+                    categoriesPrev.push("Outros");
+            }
+            
            storeProducts.push({
                 product: {
                     id: e.id,
@@ -56,6 +71,7 @@ export default function SalesScreen() {
            });
         });
         setProducts(orderFunction(storeProducts));        
+        setCategoriesByProducts(categoriesPrev.sort((a, b) => a.localeCompare(b)));
     }
 
     const selectImage = (categories : string[] | undefined) => {
@@ -89,6 +105,57 @@ export default function SalesScreen() {
             <SafeAreaView style = {{ ...styles.container, backgroundColor: colors.background }}>
                 <Header iconType="arrow-back"/>
                 {
+                    categoriesByProducts !== undefined && categoriesByProducts.length > 0 ? (
+                        <View 
+                            style = {{ backgroundColor: "#FFFFFF", height: 40, marginTop: 20, width: "90%", borderRadius: 5, paddingHorizontal: 15 }}
+                        >                            
+                            {/*<FlatList 
+                            horizontal = { true }                            
+                            data = { categoriesByProducts.sort((a, b) => a.localeCompare(b)) }
+                            contentContainerStyle = {{ gap: 5, alignItems: "center", justifyContent: "flex-start", width: "90%" }}
+                            style = {{ borderRadius: 3 }}
+                            showsHorizontalScrollIndicator = { false }                            
+                            renderItem = { ({ item }) => {
+                                    const isSelected = selectedCategory === item;
+                                    return (
+                                        <TouchableOpacity 
+                                            onPress = { () => selectedCategory === item ? setSelectedCategory(undefined) : setSelectedCategory(item) }
+                                            style = {{ backgroundColor: isSelected ? "rgba(109, 8, 8, 0.8)" : undefined, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 50 }}
+                                        >
+                                            <Text 
+                                                style = {{ fontFamily: "Inter_400Regular", fontSize: 14, color: isSelected ? "#FFFFFF" : "#000000", opacity: isSelected ? 1 : 0.5 }}
+                                            >
+                                                { item }
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                }                                
+                            }
+                        />*/}
+                            <ScrollView horizontal showsHorizontalScrollIndicator = { false } contentContainerStyle = {{ gap: 10, alignItems: "center"}} style = {{ borderRadius: 5 }}>
+                                {
+                                    categoriesByProducts.sort((a, b) => a.localeCompare(b)).map(item => {
+                                        const isSelected = selectedCategory === item;
+                                        return (
+                                            <TouchableOpacity 
+                                                onPress = { () => selectedCategory === item ? setSelectedCategory(undefined) : setSelectedCategory(item) }
+                                                style = {{ backgroundColor: isSelected ? "rgba(109, 8, 8, 0.8)" : undefined, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 50 }}
+                                            >
+                                                <Text 
+                                                    style = {{ fontFamily: "Inter_400Regular", fontSize: 14, color: isSelected ? "#FFFFFF" : "#000000", opacity: isSelected ? 1 : 0.5 }}
+                                                >
+                                                    { item }
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })
+                                }
+                            </ScrollView>
+                        </View>
+                    ) : null
+                }    
+
+                {
                     products === undefined ? (
                         <View style = { styles.loadingContainer }>
                             <ActivityIndicator size = { 40 } color = "#6D0808"/>
@@ -97,10 +164,19 @@ export default function SalesScreen() {
                     ) : products.length > 0 ? (
                         <ScrollView style = { styles.scrollContainer } contentContainerStyle = { styles.scrollContentContainer } showsVerticalScrollIndicator = { false }>
                             <Text style = { styles.hint }>Selecione os produtos que desejas adicionar à venda. Basta indicar a quantidade desejada.</Text>
-                            <Text style = { styles.title }>Todos os Produtos</Text>
+                            {
+                                categoriesByProducts === undefined || categoriesByProducts.length === 0 ? (
+                                    <Text style = { styles.title }>Todos os Produtos</Text>
+                                ) : null
+                            }
                             <FlatList
                                 style = { styles.flatListContainer }
-                                data = { products }
+                                data = { 
+                                    selectedCategory ? (
+                                        selectedCategory === "Outros" ? products.filter(e => e.product.categories === undefined) :
+                                            products.filter(e => e.product.categories?.includes(selectedCategory!))
+                                    ) : products                                    
+                                }
                                 renderItem = { ({item}) => {
                                     return(
                                         <View style = { styles.itemContainer }>
@@ -195,7 +271,7 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         width: "90%",
-        marginTop: 56,
+        marginTop: 0,
         marginBottom: 20
     },
     scrollContentContainer: {
@@ -208,12 +284,12 @@ const styles = StyleSheet.create({
         fontFamily: "Inter_400Regular",
         fontSize: 12,
         textAlign: "center",
+        marginVertical: 25
     },
     title: {
         fontFamily: "Inter_700Bold",
         fontSize: 22,
         textAlign: "center",
-        marginTop: 34,
         marginBottom: 23
     },
     flatListContainer: {
