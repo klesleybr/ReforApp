@@ -108,30 +108,7 @@ export default function SalesScreen() {
                     categoriesByProducts !== undefined && categoriesByProducts.length > 0 ? (
                         <View 
                             style = {{ backgroundColor: "#FFFFFF", height: 40, marginTop: 20, width: "90%", borderRadius: 5, paddingHorizontal: 15 }}
-                        >                            
-                            {/*<FlatList 
-                            horizontal = { true }                            
-                            data = { categoriesByProducts.sort((a, b) => a.localeCompare(b)) }
-                            contentContainerStyle = {{ gap: 5, alignItems: "center", justifyContent: "flex-start", width: "90%" }}
-                            style = {{ borderRadius: 3 }}
-                            showsHorizontalScrollIndicator = { false }                            
-                            renderItem = { ({ item }) => {
-                                    const isSelected = selectedCategory === item;
-                                    return (
-                                        <TouchableOpacity 
-                                            onPress = { () => selectedCategory === item ? setSelectedCategory(undefined) : setSelectedCategory(item) }
-                                            style = {{ backgroundColor: isSelected ? "rgba(109, 8, 8, 0.8)" : undefined, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 50 }}
-                                        >
-                                            <Text 
-                                                style = {{ fontFamily: "Inter_400Regular", fontSize: 14, color: isSelected ? "#FFFFFF" : "#000000", opacity: isSelected ? 1 : 0.5 }}
-                                            >
-                                                { item }
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                }                                
-                            }
-                        />*/}
+                        >                                                        
                             <ScrollView horizontal showsHorizontalScrollIndicator = { false } contentContainerStyle = {{ gap: 10, alignItems: "center"}} style = {{ borderRadius: 5 }}>
                                 {
                                     categoriesByProducts.sort((a, b) => a.localeCompare(b)).map(item => {
