@@ -15,9 +15,7 @@ export default function FinalizeSaleScreen({ navigation, route } : StackNavigato
     
     const { colors } = useTheme();
     const { selectedProducts, totalValue } = route.params;
-    const paymentMethodList = [
-        { label: "Crédito", value: "Cartão de crédito" },
-        { label: "Débito", value: "Cartão de débito" },
+    const paymentMethodList = [        
         { label: "Dinheiro", value: "Dinheiro" },        
         { label: "PIX", value: "PIX" },          
         { label: "Outro", value: "Outro"},        

@@ -84,7 +84,7 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
                     /> 
                     <DrawerItem 
                         label = "Relatórios" 
-                        onPress={() => null } 
+                        onPress={() => navigation.navigate("Screens", { screen: "Reports" }) } 
                         icon = { () => <Foundation name = "page-export-pdf" color = "#000000" size = { 23 } style = { [styles.icon, { paddingHorizontal: 7 }] }/>}   
                         labelStyle = { styles.label }
                         style = { styles.item }                                         

@@ -238,11 +238,9 @@ export default function ShowSalesScreen() {
 function PaymentModal({ id, visible, onClose } : { id?: string, visible : boolean, onClose: () => void }) {
 
     const [paymentMethod, setPaymentMethod] = useState<undefined | string>(undefined);
-    const paymentMethodList = [
-        { label: "PIX", value: "PIX" },
-        { label: "Cartão de crédito", value: "Cartão de crédito" },
-        { label: "Cartão de débito", value: "Cartão de débito"},
+    const paymentMethodList = [                
         { label: "Dinheiro", value: "Dinheiro"},
+        { label: "PIX", value: "PIX" },
         { label: "Outro", value: "Outro"}
     ];
 
