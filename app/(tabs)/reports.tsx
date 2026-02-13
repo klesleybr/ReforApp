@@ -23,13 +23,11 @@ export default function ReportScreen() {
 
         let total = 0;
 
-        salesData?.forEach(doc => {
-            console.log("Documento da vez:", doc);
+        salesData?.forEach(doc => {            
             if(isPaidOnly && !doc.get("isPaid"))
                 return;
             const products = doc.get("products") as any[];
-            products.forEach(p => { 
-                console.log("Produto da vez:", p);
+            products.forEach(p => {                 
                 total = total + (p.amount * p.unitPrice) 
             })
         });            
@@ -141,14 +139,11 @@ export default function ReportScreen() {
                                 end.setUTCMinutes(59);
                                 end.setUTCSeconds(59);
                                 end.setUTCMilliseconds(999);                                
-                            }
-                            console.log("Início:", init);
-                            console.log("Final:", end);
+                            }                            
                             const q = query(collection(db, "sales"), where("createdAt", ">=", init),
                                 where("createdAt", "<=", end));
                             const querySnapshot = await getDocs(q); 
-                            const data = querySnapshot.docs;
-                            console.log("Dados do querySnapshot:", data)
+                            const data = querySnapshot.docs;                            
                             setSalesData(data);                           
                             setTotal();
                             setIsLoading(false);
