@@ -307,16 +307,10 @@ export default function SalesScreen() {
                                     <Text style = { styles.title }>Todos os Produtos</Text>
                                 ) : null
                             }
-                            <FlatList
-                                style = { styles.flatListContainer }
-                                data = { 
-                                    selectedCategory ? (
-                                        selectedCategory === "Outros" ? products.filter(e => e.product.categories === undefined) :
-                                            products.filter(e => e.product.categories?.includes(selectedCategory!))
-                                    ) : products                                    
-                                }
-                                renderItem = { ({item}) => {
-                                    return(
+                            
+                            {
+                                /**
+                                 * selectedCategory === undefined ? (
                                         <View style = { styles.itemContainer }>
                                             <View style = { styles.item }>
                                                 <Image source={ selectImage(item.product.categories) } style = { styles.productImage }/>
@@ -354,8 +348,145 @@ export default function SalesScreen() {
                                                 }
                                             </View>                                    
                                         </View>
-                                    );
-                                } }
+                                        ) : item.product.categories !== undefined && item.product.categories.includes(selectedCategory) ? (
+                                            <View style = { styles.itemContainer }>
+                                                <View style = { styles.item }>
+                                                    <Image source={ selectImage(item.product.categories) } style = { styles.productImage }/>
+                                                    <View style = { styles.productInfo }>
+                                                        <Text style = {{ ...styles.itemTitle, }} numberOfLines = { 2 } >{ item.product.name }</Text>
+                                                        <View style = { styles.priceContainer }>
+                                                            <Text style = {{ ...styles.itemTitle, fontSize: 15 }}>Preço:</Text>
+                                                            <Text style = {{ ...styles.text, fontSize: 15}}>
+                                                                { item.product.unitPrice.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                                            </Text>
+                                                        </View>                                            
+                                                    </View>                                        
+                                                </View>
+
+                                                <View>
+                                                    {
+                                                        item.product.status === false ? (
+                                                            <Text style = { styles.productOff }>Produto desativado</Text>                                                
+                                                        ) : item.product.availableAmount <= 0 ? (
+                                                            <Text style = { styles.productOff }>Produto indisponível</Text>
+                                                        ) : (
+                                                            <Stepper 
+                                                                value = { item.amount } 
+                                                                stopIncrementValue = { item.product.availableAmount }
+                                                                onPressLeft = { () => {                                                                 
+                                                                    item.amount = item.amount - 1;  
+                                                                    item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                                }}
+                                                                onPressRight= { () => {                                                                 
+                                                                    item.amount = item.amount + 1;
+                                                                    item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                                }}
+                                                            />
+                                                        )
+                                                    }
+                                                </View>                                    
+                                            </View>
+                                        ) : item.product.categories === undefined && selectedCategory === "Outros" ? (
+                                            <View style = { styles.itemContainer }>
+                                                <View style = { styles.item }>
+                                                    <Image source={ selectImage(item.product.categories) } style = { styles.productImage }/>
+                                                    <View style = { styles.productInfo }>
+                                                        <Text style = {{ ...styles.itemTitle, }} numberOfLines = { 2 } >{ item.product.name }</Text>
+                                                        <View style = { styles.priceContainer }>
+                                                            <Text style = {{ ...styles.itemTitle, fontSize: 15 }}>Preço:</Text>
+                                                            <Text style = {{ ...styles.text, fontSize: 15}}>
+                                                                { item.product.unitPrice.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                                            </Text>
+                                                        </View>                                            
+                                                    </View>                                        
+                                                </View>
+
+                                                <View>
+                                                    {
+                                                        item.product.status === false ? (
+                                                            <Text style = { styles.productOff }>Produto desativado</Text>                                                
+                                                        ) : item.product.availableAmount <= 0 ? (
+                                                            <Text style = { styles.productOff }>Produto indisponível</Text>
+                                                        ) : (
+                                                            <Stepper 
+                                                                value = { item.amount } 
+                                                                stopIncrementValue = { item.product.availableAmount }
+                                                                onPressLeft = { () => {                                                                 
+                                                                    item.amount = item.amount - 1;  
+                                                                    item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                                }}
+                                                                onPressRight= { () => {                                                                 
+                                                                    item.amount = item.amount + 1;
+                                                                    item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                                }}
+                                                            />
+                                                        )
+                                                    }
+                                                </View>                                    
+                                            </View>
+                                        ) : null
+                                 */
+                            }
+
+                            <FlatList
+                                style = { styles.flatListContainer }
+                                showsVerticalScrollIndicator = { false }
+                                data = { 
+                                    products                                   
+                                }
+                                renderItem = { ({item}) => {
+
+                                        let isTrue = false;
+                                        if(selectedCategory === undefined) {
+                                            isTrue = true;
+                                        } else if (item.product.categories !== undefined && item.product.categories.includes(selectedCategory)) {
+                                            isTrue = true;
+                                        } else if (item.product.categories === undefined && selectedCategory === "Outros") {
+                                            isTrue = true;
+                                        }
+
+                                        return isTrue ? (
+                                            <View style = { styles.itemContainer }>
+                                                <View style = { styles.item }>
+                                                    <Image source={ selectImage(item.product.categories) } style = { styles.productImage }/>
+                                                    <View style = { styles.productInfo }>
+                                                        <Text style = {{ ...styles.itemTitle, }} numberOfLines = { 2 } >{ item.product.name }</Text>
+                                                        <View style = { styles.priceContainer }>
+                                                            <Text style = {{ ...styles.itemTitle, fontSize: 15 }}>Preço:</Text>
+                                                            <Text style = {{ ...styles.text, fontSize: 15}}>
+                                                                { item.product.unitPrice.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                                            </Text>
+                                                        </View>                                            
+                                                    </View>                                        
+                                                </View>
+
+                                                <View>
+                                                    {
+                                                        item.product.status === false ? (
+                                                            <Text style = { styles.productOff }>Produto desativado</Text>                                                
+                                                        ) : item.product.availableAmount <= 0 ? (
+                                                            <Text style = { styles.productOff }>Produto indisponível</Text>
+                                                        ) : (
+                                                            <Stepper 
+                                                                value = { item.amount } 
+                                                                stopIncrementValue = { item.product.availableAmount }
+                                                                onPressLeft = { () => {                                                                 
+                                                                    item.amount = item.amount - 1;  
+                                                                    item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                                }}
+                                                                onPressRight= { () => {                                                                 
+                                                                    item.amount = item.amount + 1;
+                                                                    item.partialTotal = item.amount * item.product.unitPrice;                                                                
+                                                                }}
+                                                            />
+                                                        )
+                                                    }
+                                                </View>                                    
+                                            </View>
+
+                                        ) : null                                    
+                                    }                                        
+                                }
                             />
 
                             <TouchableOpacity style = { styles.nextButton } onPress={ () => toDetails() }>
