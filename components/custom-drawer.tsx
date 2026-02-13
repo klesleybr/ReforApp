@@ -9,12 +9,23 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Foundation from '@expo/vector-icons/Foundation';
 import { useState } from "react";
 import Entypo from '@expo/vector-icons/Entypo';
+import { auth } from "@/config/firebaseConfig";
+import { useAuth } from "@/context/auth-context";
+import { signOut } from "firebase/auth";
 
 const username : string = "Usuário Padrão"
 
 export default function CustomDrawerContent ({ navigation } : DrawerContentComponentProps) {    
     
     const [expandSale, setExpandSale] = useState<boolean>(false);
+    const { setLoggedUser } = useAuth();
+
+    const signOutUser = async() => {
+        signOut(auth).then((response) => {
+            console.log(response);
+            setLoggedUser ? setLoggedUser(null) : null;
+        }).catch((error) => console.log(error));
+    }
 
     return(
         <SafeAreaProvider>
@@ -98,7 +109,7 @@ export default function CustomDrawerContent ({ navigation } : DrawerContentCompo
                     />  
                 </View>
                 <View style = {{ width: "100%", alignItems: "center", marginTop: "10%" }}>
-                    <TouchableOpacity style = { styles.logout } onPress={ () => navigation.navigate("Screens", { screen: "Auth" })}>
+                    <TouchableOpacity style = { styles.logout } onPress={ () => { navigation.closeDrawer(); signOutUser(); } }>
                         <Text style = { styles.label }>Sair</Text>
                         <MaterialCommunityIcons name = "logout" color = "#FFFFFF" size = { 19 } />
                     </TouchableOpacity>

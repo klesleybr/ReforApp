@@ -1,29 +1,36 @@
 import { useState } from "react";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { Text, StyleSheet, TextInput, ImageBackground, TouchableOpacity } from "react-native";
+import { Text, StyleSheet, TextInput, ImageBackground, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Logo from "@/assets/images/vertical-logo.svg";
-import { StackNavigatorProps } from "../_layout";
 import { getAuth, signInWithEmailAndPassword, User } from "firebase/auth";
 import { app } from "@/config/firebaseConfig.js";
+import { useAuth } from "@/context/auth-context";
+import { auth } from "@/config/firebaseConfig.js";
+import { DrawerContentComponentProps } from "@react-navigation/drawer";
+import { useFocusEffect } from "expo-router";
 
-export default function AuthScreen({ navigation } : StackNavigatorProps) {
+export default function AuthScreen() {
+    const { setLoggedUser } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");    
     const anyFieldEmpty : boolean = email == "" || password == "";
+    const [isLoading, setIsLoading] = useState(false);
 
-    const auth = getAuth(app);
-    const [user, setUser] = useState<User | undefined>(undefined);
-
-    const login = async () => await signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {            
-            setUser(userCredential.user);
-            setPassword("");
-            navigation.navigate("Home");
-        }).catch(error => {        
-            const errorCode = error.code;
-            const errorMessage = error.message;            
-        });
+    const login = async () => {
+        if(anyFieldEmpty)
+            return;
+        setIsLoading(true);
+        await signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {   
+                console.log("Success");
+                setLoggedUser ? setLoggedUser(userCredential.user) : null;
+                setPassword("");
+                setEmail("");
+            }).catch((error) => {        
+                console.log(error);
+            }).finally(() => setIsLoading(false));
+    }
 
     return(
 
@@ -44,9 +51,10 @@ export default function AuthScreen({ navigation } : StackNavigatorProps) {
                         placeholder="Digite o seu e-mail" 
                         placeholderTextColor={"rgba(28, 13, 13, 0.5)"}                    
                         style = { styles.textInput } 
-                        autoFocus={ true }
+                        autoCapitalize="none"
                         value = { email }
-                        onChangeText = { value => setEmail(value) }                       
+                        onChangeText = { value => setEmail(value) }
+                        inputMode="email"                       
                     />
                     <TextInput 
                         placeholder="Digite a sua senha" 
@@ -55,13 +63,25 @@ export default function AuthScreen({ navigation } : StackNavigatorProps) {
                         style = { styles.textInput }
                         value={ password }
                         onChangeText={ value => setPassword(value) }
+                        autoCapitalize="none"
                     />
                     <TouchableOpacity 
                         style = { [styles.button, { borderColor: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF"}] } 
-                        onPress={ () => navigation.navigate("Home") }
+                        onPress={ () => login() }
                         disabled = { false }
                     >
-                        <Text style = { [styles.text, { color: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF" }] }>Entrar</Text>
+
+                        {
+                            isLoading ? (
+                                <View style = {{ flexDirection: "row", gap: 10 }}>
+                                    <ActivityIndicator color = "#FFFFFF"></ActivityIndicator>
+                                    <Text style = {{ ...styles.text, color: "#FFFFFF" }}>Entrando</Text>
+                                    
+                                </View>
+                            ) : (
+                                <Text style = { [styles.text, { color: anyFieldEmpty ? "rgba(255, 255, 255, 0.4)" : "#FFFFFF" }] }>Entrar</Text>
+                            )
+                        }                                                    
                     </TouchableOpacity>                    
                 </ImageBackground>
             </SafeAreaView>
@@ -110,7 +130,8 @@ const styles = StyleSheet.create({
         paddingLeft: 13,
         borderRadius: 3,
         fontSize: 15,
-        fontFamily: "Inter_400Regular"
+        fontFamily: "Inter_400Regular",
+        color: "#000000"
     },
 
     button: {

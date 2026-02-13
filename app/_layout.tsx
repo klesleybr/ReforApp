@@ -15,6 +15,9 @@ import SalesScreen, { ProductSale } from './(tabs)/sales';
 import SaleDetailsScreen from './(tabs)/sale_details';
 import FinalizeSaleScreen from './(tabs)/finalize_sale';
 import ShowSalesScreen from './(tabs)/show_sales';
+import { AuthProvider, useAuth } from '@/context/auth-context';
+import ReportScreen from './(tabs)/reports';
+import TesteView from './(tabs)/texte';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,6 +42,7 @@ type RootParamsList = {
   SaleDetails: { selectedProducts : ProductSale[], totalValue : number };
   FinalizeSales: { selectedProducts : ProductSale[], totalValue : number };
   ShowSales: undefined;
+  Reports: undefined
 }
 export type StackNavigatorProps = NativeStackScreenProps<RootParamsList>;
 export type DrawerNavProps = DrawerNavigationProp<RootParamsList>;
@@ -60,16 +64,27 @@ export default function RootStack() {
   const Stack = createNativeStackNavigator<RootParamsList>();
   const Drawer = createDrawerNavigator();
 
-  const  Screens =  () => {
+  const  Screens = () => {
+    const { loggedUser } = useAuth();
     return(
       <Stack.Navigator initialRouteName= "Auth" screenOptions={ { headerShown: false } }>
-        <Stack.Screen name = "Auth" component = { AuthScreen } options= {{  }}></Stack.Screen>
-        <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
-        <Stack.Screen name = "Stock" component = { StockScreen }></Stack.Screen>
-        <Stack.Screen name = "Sales" component = { SalesScreen }></Stack.Screen>
-        <Stack.Screen name = "SaleDetails" component = { SaleDetailsScreen }></Stack.Screen>
-        <Stack.Screen name = "FinalizeSales" component = { FinalizeSaleScreen }></Stack.Screen>
-        <Stack.Screen name = "ShowSales" component = { ShowSalesScreen }></Stack.Screen>
+        {
+          loggedUser ? (
+            <>
+              <Stack.Screen name = "Home" component = { HomeScreen }></Stack.Screen>
+              <Stack.Screen name = "Stock" component = { StockScreen }></Stack.Screen>
+              <Stack.Screen name = "Sales" component = { SalesScreen }></Stack.Screen>
+              <Stack.Screen name = "SaleDetails" component = { SaleDetailsScreen }></Stack.Screen>
+              <Stack.Screen name = "FinalizeSales" component = { FinalizeSaleScreen }></Stack.Screen>
+              <Stack.Screen name = "ShowSales" component = { ShowSalesScreen }></Stack.Screen>
+              <Stack.Screen name = "Reports" component={ ReportScreen }></Stack.Screen>
+            </>
+          ) : (
+            <>
+              <Stack.Screen name = "Auth" component = { AuthScreen } options= {{  }}></Stack.Screen>
+            </>            
+          )
+        }        
       </Stack.Navigator>   
     );
   }  
@@ -79,18 +94,20 @@ export default function RootStack() {
 
   return(
     <ThemeProvider value = { MyDefaultTheme }>
-      <Drawer.Navigator 
-        screenOptions={ 
-          { 
-            headerShown: false, 
-            drawerStyle: { backgroundColor: MyDefaultTheme.colors.primary }                                                 
-          }
-        } 
-        initialRouteName = "Screens" 
-        drawerContent = { (props) => <CustomDrawerContent {...props} /> }      
-      >
-        <Drawer.Screen options={{ popToTopOnBlur: true }} name = "Screens" component = { Screens }></Drawer.Screen>        
-      </Drawer.Navigator>
+      <AuthProvider>
+        <Drawer.Navigator 
+          screenOptions={ 
+            { 
+              headerShown: false, 
+              drawerStyle: { backgroundColor: MyDefaultTheme.colors.primary }                                                 
+            }
+          } 
+          initialRouteName = "Screens" 
+          drawerContent = { (props) => <CustomDrawerContent {...props} /> }      
+        >
+          <Drawer.Screen options={{ popToTopOnBlur: true, swipeEnabled: false }} name = "Screens" component = { Screens }></Drawer.Screen>        
+        </Drawer.Navigator>
+      </AuthProvider>
     </ThemeProvider>
   );
 
