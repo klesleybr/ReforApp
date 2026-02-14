@@ -82,6 +82,7 @@ export default function ReportScreen() {
                                     placeholder="DD/MM/AAAA"
                                     style = { styles.textInput }
                                     textAlign="center"
+                                    placeholderTextColor={"rgba(0, 0, 0, 0.4)"}
                                 />
                             </View>  
                         </View>
@@ -100,6 +101,7 @@ export default function ReportScreen() {
                                     placeholder="DD/MM/AAAA"
                                     style = { styles.textInput }
                                     textAlign="center"
+                                    placeholderTextColor={"rgba(0, 0, 0, 0.4)"}
                                 />
                             </View>
                         </View>

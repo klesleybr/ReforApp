@@ -81,19 +81,6 @@ export default function HomeScreen() {
     const [goal, setGoal] = useState<{ id: string, value: number } | undefined>(undefined);
     const [showGoalModal, setShowGoalModal] = useState(false);
 
-    /*const chartData = [
-        {
-            value: goalData[0].value,            
-            color: "#4A1212",
-            text: `${ (goalData[0].value / goalData[1].value * 100).toFixed(0) } %`         
-        },
-        {
-            value: goalData[1].value -goalData[0].value,
-            color: "#FFFFFF",            
-            textBackground: "meta"
-        }
-    ];*/
-
     const chartData = [
         {
             value: totalValueSales,

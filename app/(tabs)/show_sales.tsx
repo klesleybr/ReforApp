@@ -131,7 +131,8 @@ export default function ShowSalesScreen() {
                                         placeholder = "Pesquise por um cliente..."
                                         numberOfLines = {1}    
                                         value = { customerValue }
-                                        onChangeText = { value => setCustomerValue(value) }                                
+                                        onChangeText = { value => setCustomerValue(value) }     
+                                        placeholderTextColor={"rgba(0, 0, 0, 0.4)"}                           
                                     />
                                 </View>
                                 <FlatList                                  
