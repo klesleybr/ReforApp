@@ -17,7 +17,6 @@ import FinalizeSaleScreen from './(tabs)/finalize_sale';
 import ShowSalesScreen from './(tabs)/show_sales';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import ReportScreen from './(tabs)/reports';
-import TesteView from './(tabs)/texte';
 
 SplashScreen.preventAutoHideAsync();
 

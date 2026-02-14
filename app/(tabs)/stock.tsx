@@ -181,7 +181,8 @@ export default function StockScreen() {
                                     placeholder = "Pesquise por um produto..."
                                     numberOfLines = {1}    
                                     value = { searchProduct }
-                                    onChangeText = { value => setSearchProduct(value) }                                
+                                    onChangeText = { value => setSearchProduct(value) }    
+                                    placeholderTextColor={"rgba(0, 0, 0, 0.4)"}                           
                                 />
                             </View>                                                                                       
                             <FlatList
@@ -242,8 +243,8 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
     const [categoryName, setCategoryName] = useState<string>("");
     const [categoryDescription, setCategoryDescription] = useState<string | undefined>(undefined);
     const [createCategory, setCreateCategory] = useState<boolean>(false);
-    const [priceString, setPriceString] = useState<string>("0");
-    const [costString, setCostString] = useState<string>("0");
+    const [priceString, setPriceString] = useState<string>("");
+    const [costString, setCostString] = useState<string>("");
     
     const productReference : Product = {
         name: "",
@@ -287,6 +288,8 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
     }
 
     const addProduct = async () => {
+        if(product.name === "" || priceString === "" || costString === "")
+            return;
         try {                        
             const add = await addDoc(collection(db, "products"), { 
                 name: product.name.trim(),
@@ -361,6 +364,8 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                                 value = { costString }
                                 onChangeText= { (value) => { setCostString((prev) => formatDecimal(value, prev, "cost"))} }
                                 inputMode = "decimal" 
+                                placeholder="0.00"
+                                placeholderTextColor={"rgba(0, 0, 0, 0.6)"}
                             />
                         </View>                     
                         <View style = {{ gap: 8, width: "50%" }}>
@@ -370,6 +375,8 @@ function StockModal({ onClose, categories, productData, isVisible = false } : St
                                 value = { priceString }
                                 onChangeText = { (value) => setPriceString((prev => formatDecimal(value, prev, "price"))) } 
                                 inputMode = "decimal" 
+                                placeholder="0.00"
+                                placeholderTextColor={"rgba(0, 0, 0, 0.6)"}
                             />
                         </View> 
                     </View>
